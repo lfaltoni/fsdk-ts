@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useProfile = void 0;
 const react_1 = require("react");
 const storage_1 = require("../../utils/storage");
+const env_1 = require("../../utils/env");
 const useProfile = () => {
     const [profile, setProfile] = (0, react_1.useState)({});
     const [user, setUser] = (0, react_1.useState)(null);
@@ -32,7 +33,9 @@ const useProfile = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`/user/profile?user_id=${userId}`);
+            const response = await fetch(`${env_1.envConfig.apiUrl}/user/profile?user_id=${userId}`, {
+                credentials: 'include'
+            });
             const data = await response.json();
             if (data.success) {
                 setProfile(data.profile_data || {});
@@ -60,11 +63,12 @@ const useProfile = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch('/user/profile', {
+            const response = await fetch(`${env_1.envConfig.apiUrl}/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     user_id: user.user_id,
                     profile_data: profileData

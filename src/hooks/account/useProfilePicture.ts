@@ -1,4 +1,5 @@
 import { useState, useRef, ChangeEvent } from 'react';
+import { envConfig } from '../../utils/env';
 
 export interface ProfilePictureResponse {
   success: boolean;
@@ -20,7 +21,9 @@ export const useProfilePicture = (userId: string) => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/media/profile-picture/${userId}`);
+      const response = await fetch(`${envConfig.apiUrl}/media/profile-picture/${userId}`, {
+        credentials: 'include'
+      });
       const data: ProfilePictureResponse = await response.json();
 
       if (response.ok && data.success) {
@@ -63,7 +66,7 @@ export const useProfilePicture = (userId: string) => {
       formData.append('file', file);
       formData.append('user_id', userId);
 
-      const response = await fetch('/media/upload/profile-picture', {
+      const response = await fetch(`${envConfig.apiUrl}/media/upload/profile-picture`, {
         method: 'POST',
         body: formData,
         credentials: 'include'

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authApi } from '../../api/auth';
-import { storage } from '../../utils/storage';
-import type { LoginCredentials, RegisterData, AuthResponse, User } from '../../types/auth';
+import { useAuth } from './useAuth';
+import type { LoginCredentials, RegisterData, User } from '../../types/auth';
 import { getLogger } from '../../utils/logging';
 
 const logger = getLogger('useLogin');
@@ -20,6 +20,7 @@ interface UseLoginReturn {
 export const useLogin = (): UseLoginReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { login: authLogin } = useAuth();
 
   const clearError = useCallback(() => {
     setError(null);
@@ -35,8 +36,8 @@ export const useLogin = (): UseLoginReturn => {
 
       const user = await authApi.login(credentials);
       
-      // Store user session
-      storage.setUser(user);
+      // Use useAuth's login function to update React state
+      authLogin(user);
       logger.info('Login successful', { userId: user.user_id });
       
       return user;
@@ -48,7 +49,7 @@ export const useLogin = (): UseLoginReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [authLogin]);
 
   const register = useCallback(async (userData: RegisterData): Promise<User> => {
     setIsLoading(true);
@@ -60,8 +61,8 @@ export const useLogin = (): UseLoginReturn => {
 
       const user = await authApi.register(userData);
       
-      // Store user session
-      storage.setUser(user);
+      // Use useAuth's login function to update React state
+      authLogin(user);
       logger.info('Registration successful', { userId: user.user_id });
       
       return user;
@@ -73,7 +74,7 @@ export const useLogin = (): UseLoginReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [authLogin]);
 
   return {
     login,

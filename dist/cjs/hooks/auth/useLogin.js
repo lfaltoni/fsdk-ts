@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useLogin = void 0;
 const react_1 = require("react");
 const auth_1 = require("../../api/auth");
-const storage_1 = require("../../utils/storage");
+const useAuth_1 = require("./useAuth");
 const logging_1 = require("../../utils/logging");
 const logger = (0, logging_1.getLogger)('useLogin');
 /**
@@ -12,6 +12,7 @@ const logger = (0, logging_1.getLogger)('useLogin');
 const useLogin = () => {
     const [isLoading, setIsLoading] = (0, react_1.useState)(false);
     const [error, setError] = (0, react_1.useState)(null);
+    const { login: authLogin } = (0, useAuth_1.useAuth)();
     const clearError = (0, react_1.useCallback)(() => {
         setError(null);
     }, []);
@@ -22,8 +23,8 @@ const useLogin = () => {
             logger.info('Starting login process');
             logger.logFormSubmission(credentials);
             const user = await auth_1.authApi.login(credentials);
-            // Store user session
-            storage_1.storage.setUser(user);
+            // Use useAuth's login function to update React state
+            authLogin(user);
             logger.info('Login successful', { userId: user.user_id });
             return user;
         }
@@ -36,7 +37,7 @@ const useLogin = () => {
         finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [authLogin]);
     const register = (0, react_1.useCallback)(async (userData) => {
         setIsLoading(true);
         setError(null);
@@ -44,8 +45,8 @@ const useLogin = () => {
             logger.info('Starting registration process');
             logger.logFormSubmission(userData);
             const user = await auth_1.authApi.register(userData);
-            // Store user session
-            storage_1.storage.setUser(user);
+            // Use useAuth's login function to update React state
+            authLogin(user);
             logger.info('Registration successful', { userId: user.user_id });
             return user;
         }
@@ -58,7 +59,7 @@ const useLogin = () => {
         finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [authLogin]);
     return {
         login,
         register,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { storage } from '../../utils/storage';
+import { envConfig } from '../../utils/env';
 import type { User } from '../../types/auth';
 
 export interface UserProfile {
@@ -51,7 +52,9 @@ export const useProfile = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/user/profile?user_id=${userId}`);
+      const response = await fetch(`${envConfig.apiUrl}/user/profile?user_id=${userId}`, {
+        credentials: 'include'
+      });
       const data: ProfileResponse = await response.json();
 
       if (data.success) {
@@ -80,11 +83,12 @@ export const useProfile = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/user/profile', {
+      const response = await fetch(`${envConfig.apiUrl}/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           user_id: user.user_id,
           profile_data: profileData

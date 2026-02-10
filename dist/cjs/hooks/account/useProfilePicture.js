@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useProfilePicture = void 0;
 const react_1 = require("react");
+const env_1 = require("../../utils/env");
 const useProfilePicture = (userId) => {
     const [profilePictureUrl, setProfilePictureUrl] = (0, react_1.useState)(null);
     const [isLoading, setIsLoading] = (0, react_1.useState)(false);
@@ -14,7 +15,9 @@ const useProfilePicture = (userId) => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`/media/profile-picture/${userId}`);
+            const response = await fetch(`${env_1.envConfig.apiUrl}/media/profile-picture/${userId}`, {
+                credentials: 'include'
+            });
             const data = await response.json();
             if (response.ok && data.success) {
                 setProfilePictureUrl(data.url || null);
@@ -55,7 +58,7 @@ const useProfilePicture = (userId) => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('user_id', userId);
-            const response = await fetch('/media/upload/profile-picture', {
+            const response = await fetch(`${env_1.envConfig.apiUrl}/media/upload/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

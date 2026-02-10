@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { authApi } from '../../api/auth';
-import { storage } from '../../utils/storage';
+import { useAuth } from './useAuth';
 import { getLogger } from '../../utils/logging';
 const logger = getLogger('useLogin');
 /**
@@ -9,6 +9,7 @@ const logger = getLogger('useLogin');
 export const useLogin = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const { login: authLogin } = useAuth();
     const clearError = useCallback(() => {
         setError(null);
     }, []);
@@ -19,8 +20,8 @@ export const useLogin = () => {
             logger.info('Starting login process');
             logger.logFormSubmission(credentials);
             const user = await authApi.login(credentials);
-            // Store user session
-            storage.setUser(user);
+            // Use useAuth's login function to update React state
+            authLogin(user);
             logger.info('Login successful', { userId: user.user_id });
             return user;
         }
@@ -33,7 +34,7 @@ export const useLogin = () => {
         finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [authLogin]);
     const register = useCallback(async (userData) => {
         setIsLoading(true);
         setError(null);
@@ -41,8 +42,8 @@ export const useLogin = () => {
             logger.info('Starting registration process');
             logger.logFormSubmission(userData);
             const user = await authApi.register(userData);
-            // Store user session
-            storage.setUser(user);
+            // Use useAuth's login function to update React state
+            authLogin(user);
             logger.info('Registration successful', { userId: user.user_id });
             return user;
         }
@@ -55,7 +56,7 @@ export const useLogin = () => {
         finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [authLogin]);
     return {
         login,
         register,

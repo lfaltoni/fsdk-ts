@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { envConfig } from '../../utils/env';
 export const useProfilePicture = (userId) => {
     const [profilePictureUrl, setProfilePictureUrl] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +12,9 @@ export const useProfilePicture = (userId) => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`/media/profile-picture/${userId}`);
+            const response = await fetch(`${envConfig.apiUrl}/media/profile-picture/${userId}`, {
+                credentials: 'include'
+            });
             const data = await response.json();
             if (response.ok && data.success) {
                 setProfilePictureUrl(data.url || null);
@@ -52,7 +55,7 @@ export const useProfilePicture = (userId) => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('user_id', userId);
-            const response = await fetch('/media/upload/profile-picture', {
+            const response = await fetch(`${envConfig.apiUrl}/media/upload/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

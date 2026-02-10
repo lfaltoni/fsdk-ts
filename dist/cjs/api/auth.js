@@ -17,6 +17,7 @@ async function apiRequest(endpoint, options = {}) {
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
+            credentials: 'include',
             ...options,
         });
         const duration = Date.now() - startTime;

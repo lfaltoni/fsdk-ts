@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { storage } from '../../utils/storage';
+import { envConfig } from '../../utils/env';
 export const useProfile = () => {
     const [profile, setProfile] = useState({});
     const [user, setUser] = useState(null);
@@ -29,7 +30,9 @@ export const useProfile = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`/user/profile?user_id=${userId}`);
+            const response = await fetch(`${envConfig.apiUrl}/user/profile?user_id=${userId}`, {
+                credentials: 'include'
+            });
             const data = await response.json();
             if (data.success) {
                 setProfile(data.profile_data || {});
@@ -57,11 +60,12 @@ export const useProfile = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch('/user/profile', {
+            const response = await fetch(`${envConfig.apiUrl}/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     user_id: user.user_id,
                     profile_data: profileData
