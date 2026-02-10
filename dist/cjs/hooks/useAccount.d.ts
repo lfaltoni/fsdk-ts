@@ -10,8 +10,8 @@ export declare const useAccount: () => {
     refreshUser: () => void;
     updateProfile: (profileData: import("./account/useProfile").UserProfile) => Promise<import("./account/useProfile").ProfileResponse | undefined>;
     refreshProfile: () => Promise<void>;
-    uploadProfilePicture: (file: File) => Promise<string | null | undefined>;
-    handleFileSelect: (event: import("react").ChangeEvent<HTMLInputElement>) => Promise<string | null | undefined>;
+    uploadProfilePicture: (file: File) => Promise<any>;
+    handleFileSelect: (event: import("react").ChangeEvent<HTMLInputElement>) => Promise<any>;
     refreshProfilePicture: () => Promise<void>;
     fileInputRef: import("react").RefObject<HTMLInputElement | null>;
     refreshAll: () => Promise<void>;

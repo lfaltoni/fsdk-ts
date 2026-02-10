@@ -4,6 +4,7 @@ exports.useProfilePicture = void 0;
 const react_1 = require("react");
 const env_1 = require("../../utils/env");
 const useProfilePicture = (userId) => {
+    console.log('useProfilePicture hook initialized with userId:', userId);
     const [profilePictureUrl, setProfilePictureUrl] = (0, react_1.useState)(null);
     const [isLoading, setIsLoading] = (0, react_1.useState)(false);
     const [uploading, setUploading] = (0, react_1.useState)(false);
@@ -18,8 +19,8 @@ const useProfilePicture = (userId) => {
             const response = await fetch(`${env_1.envConfig.apiUrl}/media/profile-picture/${userId}`, {
                 credentials: 'include'
             });
-            const data = await response.json();
-            if (response.ok && data.success) {
+            if (response.ok) {
+                const data = await response.json();
                 setProfilePictureUrl(data.url || null);
             }
             else {
@@ -28,7 +29,8 @@ const useProfilePicture = (userId) => {
                     setProfilePictureUrl(null);
                 }
                 else {
-                    setError(data.error || 'Failed to load profile picture');
+                    const errorData = await response.json();
+                    setError(errorData.error || 'Failed to load profile picture');
                 }
             }
         }
@@ -40,18 +42,22 @@ const useProfilePicture = (userId) => {
         }
     };
     const uploadProfilePicture = async (file) => {
+        console.log('uploadProfilePicture called with file:', file.name, 'size:', file.size, 'type:', file.type);
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
+            console.log('Invalid file type:', file.type);
             setError('Invalid file type. Allowed: jpg, jpeg, png, gif, webp');
             return null;
         }
         // Validate file size (10MB max)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
+            console.log('File too large:', file.size);
             setError('File too large. Maximum size is 10MB');
             return null;
         }
+        console.log('File validation passed, starting upload');
         try {
             setUploading(true);
             setError(null);
@@ -63,13 +69,19 @@ const useProfilePicture = (userId) => {
                 body: formData,
                 credentials: 'include'
             });
-            const result = await response.json();
-            if (response.ok && result.success) {
+            console.log('Upload URL:', `${env_1.envConfig.apiUrl}/media/upload/profile-picture`);
+            console.log('Upload response status:', response.status);
+            console.log('Upload response ok:', response.ok);
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Upload response data:', result);
                 setProfilePictureUrl(result.url || null);
                 return result.url;
             }
             else {
-                setError(result.error || 'Upload failed');
+                const errorData = await response.json();
+                console.log('Upload error data:', errorData);
+                setError(errorData.error || 'Upload failed');
                 return null;
             }
         }
@@ -82,9 +94,14 @@ const useProfilePicture = (userId) => {
         }
     };
     const handleFileSelect = async (event) => {
+        console.log('handleFileSelect called');
         const file = event.target.files?.[0];
-        if (!file)
+        console.log('Selected file:', file);
+        if (!file) {
+            console.log('No file selected');
             return null;
+        }
+        console.log('Calling uploadProfilePicture with file:', file.name);
         return await uploadProfilePicture(file);
     };
     const refreshProfilePicture = async () => {
@@ -92,9 +109,9 @@ const useProfilePicture = (userId) => {
     };
     const clearError = () => setError(null);
     // Load profile picture on mount
-    (0, react_1.useState)(() => {
+    (0, react_1.useEffect)(() => {
         loadProfilePicture();
-    });
+    }, []);
     return {
         profilePictureUrl,
         isLoading,

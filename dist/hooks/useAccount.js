@@ -2,9 +2,13 @@ import { useUser } from './account/useUser';
 import { useProfile } from './account/useProfile';
 import { useProfilePicture } from './account/useProfilePicture';
 export const useAccount = () => {
+    console.log('useAccount hook called');
     const userData = useUser();
+    console.log('userData:', userData);
     const profileData = useProfile();
+    console.log('profileData:', profileData);
     const profilePictureData = useProfilePicture(userData.user?.user_id || '');
+    console.log('profilePictureData:', profilePictureData);
     const refreshAll = async () => {
         await Promise.all([
             profileData.refreshProfile(),

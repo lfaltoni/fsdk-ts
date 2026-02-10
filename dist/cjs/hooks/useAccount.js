@@ -5,9 +5,13 @@ const useUser_1 = require("./account/useUser");
 const useProfile_1 = require("./account/useProfile");
 const useProfilePicture_1 = require("./account/useProfilePicture");
 const useAccount = () => {
+    console.log('useAccount hook called');
     const userData = (0, useUser_1.useUser)();
+    console.log('userData:', userData);
     const profileData = (0, useProfile_1.useProfile)();
+    console.log('profileData:', profileData);
     const profilePictureData = (0, useProfilePicture_1.useProfilePicture)(userData.user?.user_id || '');
+    console.log('profilePictureData:', profilePictureData);
     const refreshAll = async () => {
         await Promise.all([
             profileData.refreshProfile(),
