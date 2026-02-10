@@ -1,0 +1,40 @@
+{
+  "name": "frontend-lib",
+  "version": "1.0.0",
+  "description": "Reusable frontend library for foundation-sdk applications",
+  "main": "dist/cjs/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json && tsc --build tsconfig.cjs.json",
+    "build:cjs": "tsc --build tsconfig.cjs.json",
+    "build:esm": "tsc --build tsconfig.json",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["react", "frontend", "foundation-sdk", "auth"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/node": "^20.9.2",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "react": "^19.2.3"
+  },
+  "peerDependencies": {
+    "react": "^19.2.3"
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
+}
