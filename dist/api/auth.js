@@ -21,7 +21,8 @@ async function apiRequest(endpoint, options = {}) {
         const data = await response.json();
         logger.logApiResponse(response.status, data, duration);
         if (!response.ok) {
-            throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            // Handle structured error response from NEW endpoints
+            throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
         }
         return data;
     }
@@ -40,12 +41,16 @@ export const authApi = {
     login: async (credentials) => {
         logger.info('Attempting login', { email: credentials.email });
         try {
-            const user = await apiRequest('/auth/login', {
+            // NEW endpoint returns structured response: {success, message, user}
+            const response = await apiRequest('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify(credentials),
             });
-            logger.info('Login successful', { userId: user.user_id });
-            return user;
+            if (!response.user) {
+                throw new Error('Invalid response: user data missing');
+            }
+            logger.info('Login successful', { userId: response.user.user_id });
+            return response.user;
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -59,12 +64,16 @@ export const authApi = {
     register: async (userData) => {
         logger.info('Attempting registration', { email: userData.email });
         try {
-            const user = await apiRequest('/auth/register', {
+            // NEW endpoint returns structured response: {success, message, user}
+            const response = await apiRequest('/api/auth/register', {
                 method: 'POST',
                 body: JSON.stringify(userData),
             });
-            logger.info('Registration successful', { userId: user.user_id });
-            return user;
+            if (!response.user) {
+                throw new Error('Invalid response: user data missing');
+            }
+            logger.info('Registration successful', { userId: response.user.user_id });
+            return response.user;
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -78,7 +87,7 @@ export const authApi = {
     logout: async () => {
         logger.info('Attempting logout');
         try {
-            const response = await apiRequest('/auth/logout', {
+            const response = await apiRequest('/api/auth/logout', {
                 method: 'POST',
             });
             logger.info('Logout successful');
@@ -96,9 +105,13 @@ export const authApi = {
     getProfile: async () => {
         logger.info('Fetching user profile');
         try {
-            const response = await apiRequest('/auth/profile');
+            // NEW endpoint returns structured response: {success, user}
+            const response = await apiRequest('/api/auth/profile');
+            if (!response.user) {
+                throw new Error('Invalid response: user data missing');
+            }
             logger.info('Profile fetched successfully');
-            return response;
+            return response.user;
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';

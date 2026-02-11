@@ -7,6 +7,14 @@ const logger = getLogger('auth-api');
 // Base API configuration
 const API_BASE_URL = envConfig.apiUrl;
 
+// Structured response from NEW auth endpoints
+interface AuthResponse<T = any> {
+  success: boolean;
+  message?: string;
+  user?: T;
+  error?: string;
+}
+
 // Generic API request wrapper
 async function apiRequest<T>(
   endpoint: string,
@@ -14,7 +22,7 @@ async function apiRequest<T>(
 ): Promise<T> {
   const startTime = Date.now();
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   logger.logApiRequest(options.method || 'GET', url, options.body);
 
   try {
@@ -29,11 +37,12 @@ async function apiRequest<T>(
 
     const duration = Date.now() - startTime;
     const data = await response.json();
-    
+
     logger.logApiResponse(response.status, data, duration);
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      // Handle structured error response from NEW endpoints
+      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
     }
 
     return data;
@@ -52,15 +61,20 @@ export const authApi = {
    */
   login: async (credentials: LoginCredentials): Promise<User> => {
     logger.info('Attempting login', { email: credentials.email });
-    
+
     try {
-      const user = await apiRequest<User>('/auth/login', {
+      // NEW endpoint returns structured response: {success, message, user}
+      const response = await apiRequest<AuthResponse<User>>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
 
-      logger.info('Login successful', { userId: user.user_id });
-      return user;
+      if (!response.user) {
+        throw new Error('Invalid response: user data missing');
+      }
+
+      logger.info('Login successful', { userId: response.user.user_id });
+      return response.user;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Login failed', { error: errorMessage });
@@ -73,15 +87,20 @@ export const authApi = {
    */
   register: async (userData: RegisterData): Promise<User> => {
     logger.info('Attempting registration', { email: userData.email });
-    
+
     try {
-      const user = await apiRequest<User>('/auth/register', {
+      // NEW endpoint returns structured response: {success, message, user}
+      const response = await apiRequest<AuthResponse<User>>('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       });
 
-      logger.info('Registration successful', { userId: user.user_id });
-      return user;
+      if (!response.user) {
+        throw new Error('Invalid response: user data missing');
+      }
+
+      logger.info('Registration successful', { userId: response.user.user_id });
+      return response.user;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Registration failed', { error: errorMessage });
@@ -96,7 +115,7 @@ export const authApi = {
     logger.info('Attempting logout');
     
     try {
-      const response = await apiRequest<{ success: boolean; message: string }>('/auth/logout', {
+      const response = await apiRequest<{ success: boolean; message: string }>('/api/auth/logout', {
         method: 'POST',
       });
 
@@ -112,14 +131,19 @@ export const authApi = {
   /**
    * Get current user profile
    */
-  getProfile: async (): Promise<any> => {
+  getProfile: async (): Promise<User> => {
     logger.info('Fetching user profile');
-    
+
     try {
-      const response = await apiRequest<any>('/auth/profile');
-      
+      // NEW endpoint returns structured response: {success, user}
+      const response = await apiRequest<AuthResponse<User>>('/api/auth/profile');
+
+      if (!response.user) {
+        throw new Error('Invalid response: user data missing');
+      }
+
       logger.info('Profile fetched successfully');
-      return response;
+      return response.user;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Failed to fetch profile', { error: errorMessage });

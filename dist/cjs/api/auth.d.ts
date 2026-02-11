@@ -18,5 +18,5 @@ export declare const authApi: {
     /**
      * Get current user profile
      */
-    getProfile: () => Promise<any>;
+    getProfile: () => Promise<User>;
 };
