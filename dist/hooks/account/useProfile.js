@@ -1,52 +1,30 @@
 import { useState, useEffect } from 'react';
 import { storage } from '../../utils/storage';
-import { envConfig } from '../../utils/env';
+import { profileApi } from '../../api/profile';
 export const useProfile = () => {
     const [profile, setProfile] = useState({});
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    // Load user and profile data on mount
     useEffect(() => {
-        loadUserData();
         const userData = storage.getUser();
         if (userData) {
             setUser(userData);
-            loadProfileData(userData.user_id);
+            loadProfileData();
         }
     }, []);
-    const loadUserData = () => {
-        try {
-            const userData = storage.getUser();
-            if (userData) {
-                setUser(userData);
-            }
-        }
-        catch (error) {
-            setError('Failed to load user data');
-        }
-    };
-    const loadProfileData = async (userId) => {
+    const loadProfileData = async () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`${envConfig.apiUrl}/user/profile?user_id=${userId}`, {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (data.success) {
-                setProfile(data.profile_data || {});
-                if (data.user_info) {
-                    setUser(data.user_info);
-                    storage.setUser(data.user_info);
-                }
-            }
-            else {
-                setError(data.error || 'Failed to load profile data');
-            }
+            const { user: fetchedUser, profile_data } = await profileApi.getProfile();
+            setProfile(profile_data);
+            setUser(fetchedUser);
+            storage.setUser(fetchedUser);
         }
-        catch (error) {
-            setError('Network error. Please try again.');
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to load profile data';
+            setError(message);
         }
         finally {
             setIsLoading(false);
@@ -60,39 +38,20 @@ export const useProfile = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`${envConfig.apiUrl}/user/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    user_id: user.user_id,
-                    profile_data: profileData
-                }),
-            });
-            const data = await response.json();
-            if (data.success) {
-                setProfile(profileData);
-                return data;
-            }
-            else {
-                setError(data.error || 'Failed to update profile');
-                throw new Error(data.error || 'Failed to update profile');
-            }
+            await profileApi.updateProfile(profileData);
+            setProfile(profileData);
         }
-        catch (error) {
-            setError('Network error. Please try again.');
-            throw error;
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to update profile';
+            setError(message);
+            throw err;
         }
         finally {
             setIsLoading(false);
         }
     };
     const refreshProfile = async () => {
-        if (user) {
-            await loadProfileData(user.user_id);
-        }
+        await loadProfileData();
     };
     const clearError = () => setError(null);
     return {

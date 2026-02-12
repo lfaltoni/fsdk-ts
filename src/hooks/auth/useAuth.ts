@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { storage } from '../../utils/storage';
 import { authApi } from '../../api/auth';
+import { profileApi } from '../../api/profile';
 import type { User } from '../../types/auth';
 import { getLogger } from '../../utils/logging';
 
@@ -62,24 +63,24 @@ export const useAuth = (): UseAuthReturn => {
   const refreshUser = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       logger.info('Refreshing user data');
-      
-      const profileData = await authApi.getProfile();
-      
-      if (profileData) {
+
+      const { user, profile_data } = await profileApi.getProfile();
+
+      if (user) {
         const updatedUser: User = {
-          user_id: profileData.user_id,
-          email: profileData.email,
-          first_name: profileData.first_name,
-          last_name: profileData.last_name,
-          registration_order: profileData.registration_order
+          user_id: user.user_id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          registration_order: user.registration_order
         };
-        
+
         setUser(updatedUser);
         storage.setUser(updatedUser);
-        logger.info('User data refreshed', { userId: updatedUser.user_id });
+        logger.info('User data refreshed', { userId: updatedUser.user_id, profile_data });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to refresh user';
