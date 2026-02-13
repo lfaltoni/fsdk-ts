@@ -18,3 +18,4 @@ __exportStar(require("./auth"), exports);
 __exportStar(require("./profile"), exports);
 __exportStar(require("./experiences"), exports);
 __exportStar(require("./media"), exports);
+__exportStar(require("./slots"), exports);

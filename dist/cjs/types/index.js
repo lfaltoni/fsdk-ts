@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./auth"), exports);
 __exportStar(require("./experience"), exports);
 __exportStar(require("./media"), exports);
+__exportStar(require("./slot"), exports);
