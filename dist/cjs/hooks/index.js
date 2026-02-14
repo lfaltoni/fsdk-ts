@@ -18,3 +18,4 @@ __exportStar(require("./auth"), exports);
 __exportStar(require("./account"), exports);
 __exportStar(require("./useAccount"), exports);
 __exportStar(require("./availability"), exports);
+__exportStar(require("./booking"), exports);

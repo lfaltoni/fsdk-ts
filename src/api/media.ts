@@ -4,7 +4,7 @@ import { getLogger } from '../utils/logging';
 
 const logger = getLogger('media-api');
 
-const MEDIA_BASE_URL = envConfig.mediaApiUrl;
+const MEDIA_BASE_URL = envConfig.foundationUrl;
 
 async function mediaRequest<T>(
   endpoint: string,

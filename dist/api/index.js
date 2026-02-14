@@ -1,4 +1,7 @@
 export * from './auth';
+export * from './booking';
+export * from './client';
+export * from './foundation-client';
 export * from './profile';
 export * from './experiences';
 export * from './media';

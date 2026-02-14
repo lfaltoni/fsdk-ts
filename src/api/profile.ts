@@ -1,6 +1,6 @@
 import type { User } from '../types/auth';
 import { getLogger } from '../utils/logging';
-import { apiRequest } from './client';
+import { foundationRequest } from './foundation-client';
 
 const logger = getLogger('profile-api');
 
@@ -16,7 +16,7 @@ export const profileApi = {
     logger.info('Fetching user profile');
 
     try {
-      const response = await apiRequest<ProfileResponse>('/api/users/profile');
+      const response = await foundationRequest<ProfileResponse>('/api/users/profile');
 
       if (!response.user) {
         throw new Error('Invalid response: user data missing');
@@ -38,7 +38,7 @@ export const profileApi = {
     logger.info('Attempting to update profile');
 
     try {
-      const response = await apiRequest<{ success: boolean; message: string }>('/api/users/profile', {
+      const response = await foundationRequest<{ success: boolean; message: string }>('/api/users/profile', {
         method: 'PUT',
         body: JSON.stringify(profileData),
       });

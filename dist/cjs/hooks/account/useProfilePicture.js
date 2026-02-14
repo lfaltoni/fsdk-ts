@@ -16,7 +16,7 @@ const useProfilePicture = (userId) => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch(`${env_1.envConfig.apiUrl}/media/profile-picture/${userId}`, {
+            const response = await fetch(`${env_1.envConfig.foundationUrl}/media/profile-picture/${userId}`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -64,12 +64,12 @@ const useProfilePicture = (userId) => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('user_id', userId);
-            const response = await fetch(`${env_1.envConfig.apiUrl}/media/upload/profile-picture`, {
+            const response = await fetch(`${env_1.envConfig.foundationUrl}/media/upload/profile-picture`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
             });
-            console.log('Upload URL:', `${env_1.envConfig.apiUrl}/media/upload/profile-picture`);
+            console.log('Upload URL:', `${env_1.envConfig.foundationUrl}/media/upload/profile-picture`);
             console.log('Upload response status:', response.status);
             console.log('Upload response ok:', response.ok);
             if (response.ok) {

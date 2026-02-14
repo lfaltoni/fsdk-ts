@@ -2,13 +2,13 @@
 
 export interface EnvConfig {
   apiUrl: string;
-  mediaApiUrl: string;
+  foundationUrl: string;
 }
 
 // Default configuration
 const defaultConfig: EnvConfig = {
-  apiUrl: 'http://localhost:5000',  // Default to local backend (Bookease-pro)
-  mediaApiUrl: 'http://localhost:5001',  // Default to local media service (dubaiactivities)
+  apiUrl: 'http://localhost:5000',  // Bookease-pro (bookings, slots, experiences)
+  foundationUrl: 'http://localhost:5001',  // Foundation SDK server (auth, profiles, media)
 };
 
 // Get configuration from environment or window object
@@ -17,14 +17,14 @@ export const getEnvConfig = (): EnvConfig => {
     // Browser environment - check window object first, then env
     return {
       apiUrl: (window as any).__API_URL__ || defaultConfig.apiUrl,
-      mediaApiUrl: (window as any).__MEDIA_API_URL__ || defaultConfig.mediaApiUrl,
+      foundationUrl: (window as any).__FOUNDATION_URL__ || (window as any).__MEDIA_API_URL__ || defaultConfig.foundationUrl,
     };
   }
 
   // Server environment - use process.env
   return {
     apiUrl: defaultConfig.apiUrl,
-    mediaApiUrl: defaultConfig.mediaApiUrl,
+    foundationUrl: defaultConfig.foundationUrl,
   };
 };
 
