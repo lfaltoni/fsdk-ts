@@ -1,6 +1,7 @@
 import { LoginCredentials, RegisterData, User } from '../types/auth';
 import { getLogger } from '../utils/logging';
 import { foundationRequest } from './foundation-client';
+import { storage } from '../utils/storage';
 
 const logger = getLogger('auth-api');
 
@@ -9,6 +10,7 @@ interface AuthResponse<T = unknown> {
   success: boolean;
   message?: string;
   user?: T;
+  token?: string;
   error?: string;
 }
 
@@ -26,6 +28,11 @@ export const authApi = {
       throw new Error('Invalid response: user data missing');
     }
 
+    // Store JWT for cross-service auth
+    if (response.token) {
+      storage.setToken(response.token);
+    }
+
     logger.info('Login successful', { userId: response.user.user_id });
     return response.user;
   },
@@ -40,6 +47,11 @@ export const authApi = {
 
     if (!response.user) {
       throw new Error('Invalid response: user data missing');
+    }
+
+    // Store JWT for cross-service auth
+    if (response.token) {
+      storage.setToken(response.token);
     }
 
     logger.info('Registration successful', { userId: response.user.user_id });

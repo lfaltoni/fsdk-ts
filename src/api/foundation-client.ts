@@ -1,5 +1,6 @@
 import { getLogger } from '../utils/logging';
 import { envConfig } from '../utils/env';
+import { storage } from '../utils/storage';
 
 const logger = getLogger('foundation-client');
 
@@ -23,12 +24,14 @@ export async function foundationRequest<T>(
   logger.logApiRequest(method, url, options.body);
 
   try {
+    const token = storage.getToken();
     const response = await fetch(url, {
       credentials: 'include',
       ...options,
       method,
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...(options.headers as Record<string, string>),
       },
     });

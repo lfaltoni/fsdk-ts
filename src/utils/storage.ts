@@ -28,6 +28,32 @@ export const storage = {
     }
   },
 
+  // JWT token management
+  setToken: (token: string): void => {
+    try {
+      localStorage.setItem('auth_token', token);
+    } catch (error) {
+      console.error('Failed to store token in localStorage:', error);
+    }
+  },
+
+  getToken: (): string | null => {
+    try {
+      return localStorage.getItem('auth_token');
+    } catch (error) {
+      console.error('Failed to retrieve token from localStorage:', error);
+      return null;
+    }
+  },
+
+  clearToken: (): void => {
+    try {
+      localStorage.removeItem('auth_token');
+    } catch (error) {
+      console.error('Failed to clear token from localStorage:', error);
+    }
+  },
+
   // Check if user session exists and is valid
   hasValidSession: (): boolean => {
     const user = storage.getUser();

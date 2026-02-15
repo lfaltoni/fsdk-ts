@@ -1,5 +1,6 @@
 import { getLogger } from '../utils/logging';
 import { envConfig } from '../utils/env';
+import { storage } from '../utils/storage';
 
 const logger = getLogger('api-client');
 
@@ -69,8 +70,10 @@ export async function apiRequest<T>(
   const credentials = options.credentials ?? 'include';
   const needsCsrf = MUTATING_METHODS.has(method);
 
+  const token = storage.getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
     ...(options.headers as Record<string, string>),
   };
 
