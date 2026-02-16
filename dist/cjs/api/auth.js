@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authApi = void 0;
 const logging_1 = require("../utils/logging");
 const foundation_client_1 = require("./foundation-client");
+const storage_1 = require("../utils/storage");
 const logger = (0, logging_1.getLogger)('auth-api');
 // Authentication API functions
 exports.authApi = {
@@ -15,6 +16,10 @@ exports.authApi = {
         if (!response.user) {
             throw new Error('Invalid response: user data missing');
         }
+        // Store JWT for cross-service auth
+        if (response.token) {
+            storage_1.storage.setToken(response.token);
+        }
         logger.info('Login successful', { userId: response.user.user_id });
         return response.user;
     },
@@ -26,6 +31,10 @@ exports.authApi = {
         });
         if (!response.user) {
             throw new Error('Invalid response: user data missing');
+        }
+        // Store JWT for cross-service auth
+        if (response.token) {
+            storage_1.storage.setToken(response.token);
         }
         logger.info('Registration successful', { userId: response.user.user_id });
         return response.user;

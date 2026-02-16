@@ -29,9 +29,10 @@ const useAuth = () => {
             logger.info('Starting logout process');
             // Call backend logout
             await auth_1.authApi.logout();
-            // Clear local state and storage
+            // Clear local state and storage (including JWT)
             setUser(null);
             storage_1.storage.clearUser();
+            storage_1.storage.clearToken();
             logger.info('User logged out successfully');
         }
         catch (error) {

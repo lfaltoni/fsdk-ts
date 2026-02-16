@@ -7,9 +7,14 @@ const logger = getLogger('useBooking');
 
 type BookingErrorCode = 'auth_required' | 'no_availability' | 'validation_error' | null;
 
+export interface GuestInfo {
+  guestEmail: string;
+  guestName: string;
+}
+
 interface UseBookingReturn {
   // Actions
-  reserve: (slotId: number, guests: number) => Promise<Reservation>;
+  reserve: (slotId: number, guests: number, guestInfo?: GuestInfo) => Promise<Reservation>;
   redirectToPayment: (bookingId: number) => Promise<void>;
 
   // State
@@ -56,16 +61,29 @@ export const useBooking = (handle: string): UseBookingReturn => {
   }, []);
 
   const reserve = useCallback(
-    async (slotId: number, guests: number): Promise<Reservation> => {
+    async (slotId: number, guests: number, guestInfo?: GuestInfo): Promise<Reservation> => {
       setIsSubmitting(true);
       setError(null);
       setErrorCode(null);
 
       try {
-        logger.info('Starting reservation', { handle, slotId, guests });
-        const result = await bookingApi.reserve(handle, { slotId, guests });
+        logger.info('Starting reservation', { handle, slotId, guests, isGuest: !!guestInfo });
+        const result = await bookingApi.reserve(handle, {
+          slotId,
+          guests,
+          ...(guestInfo && {
+            guestEmail: guestInfo.guestEmail,
+            guestName: guestInfo.guestName,
+          }),
+        });
         setReservation(result);
         logger.info('Reservation successful', { bookingId: result.bookingId });
+
+        // Guest checkout: redirect to Stripe immediately if checkoutUrl is present
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+        }
+
         return result;
       } catch (err) {
         const errorMessage =

@@ -20,9 +20,12 @@ const useRegister = () => {
             storage_1.storage.setUser(user);
             await login({ email: data.email, password: data.password });
             setSuccess(true);
+            return user;
         }
         catch (err) {
-            setError('Network error. Please try again.');
+            const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+            setError(message);
+            throw err;
         }
         finally {
             setIsLoading(false);

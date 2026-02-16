@@ -23,6 +23,7 @@ export interface Reservation {
   };
   totalPriceCents: number;
   formattedTotalPrice: string;
+  checkoutUrl?: string;
 }
 
 export interface BookingDetail {
