@@ -16,6 +16,8 @@ export interface ExperienceListingHostDetail extends ExperienceListingHost {
   isSuperhost: boolean;
   isVerified: boolean;
   joinedDate: string;
+  bio: string;
+  languages: string[];
 }
 
 export interface TExperienceListing {
@@ -43,4 +45,41 @@ export interface TExperienceListing {
 
 export interface TExperienceListingDetail extends TExperienceListing {
   host: ExperienceListingHostDetail;
+  // About
+  tagline: string;
+  highlights: string[];
+  suitableFor: string[];
+  // Location
+  locationType: string;
+  venueDetails: string;
+  arrivalInstructions: string;
+  // Logistics
+  groupSizeMin: number;
+  durationMinutes: number;
+  // Inclusions & Requirements
+  whatsIncluded: string[];
+  whatsNotIncluded: string[];
+  requirements: string[];
+  // Itinerary
+  itinerary: { title: string; description: string; duration_minutes: number }[];
+  // Pricing
+  pricingType: string;
+  priceCents: number | null;
+  childPriceCents: number | null;
+  childAgeMax: number | null;
+  privateGroupPriceCents: number | null;
+  // Accessibility & Age
+  wheelchairAccessible: boolean;
+  accessibilityNote: string | null;
+  minAge: number | null;
+  ageNote: string | null;
+  // Policies
+  cancellationPolicy: string;
+  cancellationPolicyLabel: string;
+  advanceBookingMinHours: number;
+  instantBooking: boolean;
+  privateBookingAvailable: boolean;
+  // Display
+  categoryLabel: string;
+  tags: string[];
 }
