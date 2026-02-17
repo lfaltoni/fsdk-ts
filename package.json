@@ -10,6 +10,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/cjs/index.js"
+    },
+    "./utils/pagination": {
+      "types": "./dist/utils/pagination.d.ts",
+      "import": "./dist/utils/pagination.js",
+      "require": "./dist/cjs/utils/pagination.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/cjs/types/index.js"
     }
   },
   "scripts": {

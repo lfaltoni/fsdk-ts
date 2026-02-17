@@ -41,6 +41,7 @@ export interface TExperienceListing {
   saleOff: string | null;
   isAds: string | null;
   map: { lat: number; lng: number };
+  providerName?: string;
 }
 
 export interface TExperienceListingDetail extends TExperienceListing {
@@ -82,4 +83,21 @@ export interface TExperienceListingDetail extends TExperienceListing {
   // Display
   categoryLabel: string;
   tags: string[];
+}
+
+export interface TProviderProfile {
+  id: number;
+  displayName: string;
+  avatarUrl: string;
+  handle: string;
+  description: string;
+  joinedDate: string;
+  listingsCount: number;
+  reviewsCount: number;
+  rating: number;
+  responseRate: number;
+  responseTime: string;
+  isSuperhost: boolean;
+  isVerified: boolean;
+  listings: TExperienceListing[];
 }
