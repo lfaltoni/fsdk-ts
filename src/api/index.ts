@@ -5,4 +5,5 @@ export * from './foundation-client';
 export * from './profile';
 export * from './experiences';
 export * from './media';
+export * from './reviews';
 export * from './slots';
