@@ -4,9 +4,11 @@
 export interface ReservationRequest {
   slotId: number;
   guests: number;
-  // Future: guest checkout fields (no login required)
+  // Guest checkout fields (no login required)
   guestEmail?: string;
   guestName?: string;
+  // Optional gift card code to apply at checkout
+  giftCardCode?: string;
 }
 
 export interface Reservation {
@@ -24,6 +26,10 @@ export interface Reservation {
   totalPriceCents: number;
   formattedTotalPrice: string;
   checkoutUrl?: string;
+  /** Set when a gift card was applied at reserve time */
+  giftCardAppliedCents?: number;
+  /** Remaining amount charged to Stripe after gift card */
+  giftCardRemainingCents?: number;
 }
 
 export interface BookingDetail {

@@ -4,3 +4,4 @@ export * from './useAccount';
 export * from './availability';
 export * from './booking';
 export * from './reviews';
+export * from "./giftcards/useGiftCard";
