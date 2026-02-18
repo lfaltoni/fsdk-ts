@@ -5,3 +5,4 @@ export * from './availability';
 export * from './booking';
 export * from './reviews';
 export * from "./giftcards/useGiftCard";
+export * from './currency/useCurrency';

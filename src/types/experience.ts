@@ -37,6 +37,8 @@ export interface TExperienceListing {
   reviewStart: number;
   reviewCount: number;
   price: string;
+  /** Raw price in AED fils (AED × 100). Use for currency-converted display. */
+  priceCents: number | null;
   maxGuests: number;
   saleOff: string | null;
   isAds: string | null;
@@ -65,7 +67,6 @@ export interface TExperienceListingDetail extends TExperienceListing {
   itinerary: { title: string; description: string; duration_minutes: number }[];
   // Pricing
   pricingType: string;
-  priceCents: number | null;
   childPriceCents: number | null;
   childAgeMax: number | null;
   privateGroupPriceCents: number | null;
