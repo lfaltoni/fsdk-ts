@@ -68,4 +68,28 @@ export const authApi = {
     logger.info('Logout successful');
     return response;
   },
+
+  requestPasswordReset: async (email: string): Promise<{ success: boolean; message: string }> => {
+    logger.info('Requesting password reset', { email });
+
+    const response = await foundationRequest<{ success: boolean; message: string }>('/api/auth/request-password-reset', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    logger.info('Password reset requested');
+    return response;
+  },
+
+  confirmPasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    logger.info('Confirming password reset');
+
+    const response = await foundationRequest<{ success: boolean; message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+
+    logger.info('Password reset confirmed');
+    return response;
+  },
 };
