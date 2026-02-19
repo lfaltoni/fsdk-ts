@@ -13,12 +13,3 @@ export interface SmtpConfig {
   pass: string
   from: string
 }
-
-export interface HostRegistrationData {
-  fullName: string
-  email: string
-  phone: string
-  activityType: string
-  numberOfExperiences: string
-  message: string
-}
