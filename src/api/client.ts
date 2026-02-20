@@ -4,6 +4,44 @@ import { storage } from '../utils/storage';
 
 const logger = getLogger('api-client');
 
+// ---------------------------------------------------------------------------
+// Structured API error
+// ---------------------------------------------------------------------------
+
+export class ApiError extends Error {
+  /** HTTP status code */
+  status: number;
+  /** Machine-readable error code from the backend (e.g. 'no_availability') */
+  code: string | null;
+  /** Full response body — may contain extra fields like remainingSpots */
+  data: Record<string, unknown>;
+
+  constructor(message: string, status: number, data: Record<string, unknown>) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = (data.error as string) || null;
+    this.data = data;
+  }
+}
+
+/**
+ * Extract a human-readable message from a Flask-Smorest 422 response.
+ * These look like: { errors: { json: { fieldName: ["error msg"] } } }
+ */
+function extractValidationMessage(data: Record<string, unknown>): string {
+  const errors = data.errors as Record<string, Record<string, string[]>> | undefined;
+  if (!errors?.json) return 'Invalid input';
+
+  const fields = errors.json;
+  const messages: string[] = [];
+  for (const [field, fieldErrors] of Object.entries(fields)) {
+    const label = field.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+    messages.push(`${label}: ${fieldErrors.join(', ')}`);
+  }
+  return messages.join('. ') || 'Invalid input';
+}
+
 export const API_BASE_URL = envConfig.apiUrl;
 
 // ---------------------------------------------------------------------------
@@ -115,12 +153,18 @@ export async function apiRequest<T>(
         const retryData = await retryResponse.json();
 
         if (!retryResponse.ok) {
-          throw new Error(retryData.message || retryData.error || `HTTP error! status: ${retryResponse.status}`);
+          const msg = retryData.message || retryData.error || `HTTP error! status: ${retryResponse.status}`;
+          throw new ApiError(msg, retryResponse.status, retryData);
         }
         return retryData;
       }
 
-      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+      // 422: Flask-Smorest validation errors have { errors: { json: { field: [...] } } }
+      const message = response.status === 422 && data.errors
+        ? extractValidationMessage(data)
+        : data.message || data.error || `HTTP error! status: ${response.status}`;
+
+      throw new ApiError(message, response.status, data);
     }
 
     return data;

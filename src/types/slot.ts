@@ -11,4 +11,6 @@ export interface ExperienceSlot {
   formattedPrice: string; // "$50.00"
   maxCapacity: number;
   remainingSpots: number;
+  /** Instructor assigned to this specific slot, or null if unassigned. */
+  host?: { id: number; name: string; photo: string } | null;
 }

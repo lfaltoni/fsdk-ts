@@ -30,6 +30,11 @@
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server/index.js",
       "require": "./dist/cjs/server/index.js"
+    },
+    "./seo": {
+      "types": "./dist/utils/seo.d.ts",
+      "import": "./dist/utils/seo.js",
+      "require": "./dist/cjs/utils/seo.js"
     }
   },
   "scripts": {

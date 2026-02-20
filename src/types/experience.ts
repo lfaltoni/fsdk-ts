@@ -1,5 +1,14 @@
 // Experience listing types — shared contract between backend APIs and frontend consumers
 
+/** Actual instructor/teacher assigned to an experience or slot (from Host model). */
+export interface ExperienceHostSummary {
+  id: number;
+  name: string;
+  bio: string;
+  photo: string;
+  languages: string[];
+}
+
 export interface ExperienceListingHost {
   displayName: string;
   avatarUrl: string;
@@ -44,6 +53,8 @@ export interface TExperienceListing {
   isAds: string | null;
   map: { lat: number; lng: number };
   providerName?: string;
+  /** Default instructor for this experience (from Host model). Null if none assigned. */
+  defaultHost?: ExperienceHostSummary | null;
 }
 
 export interface TExperienceListingDetail extends TExperienceListing {
@@ -101,4 +112,6 @@ export interface TProviderProfile {
   isSuperhost: boolean;
   isVerified: boolean;
   listings: TExperienceListing[];
+  /** Provider's active hosts/instructors (for "Meet our team" section). */
+  hosts: ExperienceHostSummary[];
 }
