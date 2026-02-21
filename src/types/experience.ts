@@ -13,6 +13,7 @@ export interface ExperienceListingHost {
   displayName: string;
   avatarUrl: string;
   handle: string;
+  logo: string;
 }
 
 export interface ExperienceListingHostDetail extends ExperienceListingHost {
@@ -103,6 +104,9 @@ export interface TProviderProfile {
   avatarUrl: string;
   handle: string;
   description: string;
+  country: string;
+  state: string;
+  logo: string;
   joinedDate: string;
   listingsCount: number;
   reviewsCount: number;
