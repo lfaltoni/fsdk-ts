@@ -103,6 +103,27 @@ export const bookingApi = {
   },
 
   /**
+   * Confirm a booking via Stripe checkout session ID.
+   * Public — no auth required; the session ID acts as proof of payment.
+   * Also confirms the booking server-side if the webhook hasn't fired yet.
+   */
+  confirmSession: async (sessionId: string): Promise<BookingDetail> => {
+    logger.info('Confirming booking via session', { sessionId: sessionId.slice(0, 16) + '...' });
+
+    try {
+      const response = await apiRequest<BookingDetail>(
+        `/api/v1/bookings/confirm-session?sessionId=${encodeURIComponent(sessionId)}`,
+      );
+      logger.info('Session confirmed', { bookingId: response.id, status: response.status });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Session confirmation failed', { error: errorMessage });
+      throw error;
+    }
+  },
+
+  /**
    * Lightweight status check for polling after payment.
    * Owner only.
    */
