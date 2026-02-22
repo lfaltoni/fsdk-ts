@@ -8,6 +8,7 @@ import type {
   BookingPaymentResponse,
   BookingCancelResponse,
   BookingStatusResponse,
+  BookingListResponse,
 } from '../types/booking';
 import { getLogger } from '../utils/logging';
 import { apiRequest } from './client';
@@ -119,6 +120,25 @@ export const bookingApi = {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Session confirmation failed', { error: errorMessage });
+      throw error;
+    }
+  },
+
+  /**
+   * List all bookings for the current authenticated user.
+   */
+  listMyBookings: async (): Promise<BookingListResponse> => {
+    logger.info('Fetching user bookings');
+
+    try {
+      const response = await apiRequest<BookingListResponse>(
+        `/api/v1/bookings/mine`,
+      );
+      logger.info('User bookings fetched', { count: response.bookings.length });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to fetch user bookings', { error: errorMessage });
       throw error;
     }
   },

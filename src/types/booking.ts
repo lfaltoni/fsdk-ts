@@ -64,3 +64,7 @@ export interface BookingStatusResponse {
   bookingId: number;
   status: string;
 }
+
+export interface BookingListResponse {
+  bookings: BookingDetail[];
+}
