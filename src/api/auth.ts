@@ -92,4 +92,24 @@ export const authApi = {
     logger.info('Password reset confirmed');
     return response;
   },
+
+  googleLogin: async (credential: string): Promise<User> => {
+    logger.info('Attempting Google login');
+
+    const response = await foundationRequest<AuthResponse<User>>('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    });
+
+    if (!response.user) {
+      throw new Error('Invalid response: user data missing');
+    }
+
+    if (response.token) {
+      storage.setToken(response.token);
+    }
+
+    logger.info('Google login successful', { userId: response.user.user_id });
+    return response.user;
+  },
 };
