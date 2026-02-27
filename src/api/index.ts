@@ -9,3 +9,4 @@ export * from './media';
 export * from './reviews';
 export * from './slots';
 export * from "./giftcards";
+export * from './billing';
