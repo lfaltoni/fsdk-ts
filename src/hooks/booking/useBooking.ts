@@ -29,7 +29,7 @@ export interface BookingError {
 
 interface UseBookingReturn {
   // Actions
-  reserve: (slotId: number, guests: number, guestInfo?: GuestInfo) => Promise<Reservation>;
+  reserve: (slotId: number, guests: number, guestInfo?: GuestInfo, giftCardCode?: string) => Promise<Reservation>;
   redirectToPayment: (bookingId: number) => Promise<void>;
 
   // State
@@ -114,7 +114,7 @@ export const useBooking = (handle: string): UseBookingReturn => {
   }, []);
 
   const reserve = useCallback(
-    async (slotId: number, guests: number, guestInfo?: GuestInfo): Promise<Reservation> => {
+    async (slotId: number, guests: number, guestInfo?: GuestInfo, giftCardCode?: string): Promise<Reservation> => {
       setIsSubmitting(true);
       clearError();
 
@@ -127,11 +127,14 @@ export const useBooking = (handle: string): UseBookingReturn => {
             guestEmail: guestInfo.guestEmail,
             guestName: guestInfo.guestName,
           }),
+          ...(giftCardCode && { giftCardCode }),
         });
         setReservation(result);
         logger.info('Reservation successful', { bookingId: result.bookingId });
 
-        // Guest checkout: redirect to Stripe immediately if checkoutUrl is present
+        // NOTE: Full-cover gift card bookings have no checkoutUrl.
+        // BookingSidebar handles routing for those. Do not throw or
+        // set error state here when checkoutUrl is absent.
         if (result.checkoutUrl) {
           window.location.href = result.checkoutUrl;
         }

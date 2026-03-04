@@ -13,7 +13,7 @@ export interface ReservationRequest {
 
 export interface Reservation {
   bookingId: number;
-  status: 'pending_payment' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'paid' | 'approved' | 'cancelled';
   slotId: number;
   guests: number;
   slot: {
