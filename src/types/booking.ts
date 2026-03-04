@@ -47,6 +47,8 @@ export interface BookingDetail {
   formattedTotalPrice: string;
   createdAt: string;
   canCancel: boolean;
+  /** Gift card amount applied to this booking (cents), if any */
+  giftCardAppliedCents?: number;
 }
 
 export interface BookingPaymentResponse {
