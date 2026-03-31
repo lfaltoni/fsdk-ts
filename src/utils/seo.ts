@@ -8,8 +8,6 @@
 // particular brand or deployment.
 // ──────────────────────────────────────────────────────────────────────────────
 
-import type { TExperienceListingDetail } from '../types/experience';
-
 // ---------------------------------------------------------------------------
 // Shared types
 // ---------------------------------------------------------------------------
@@ -43,68 +41,6 @@ export interface FAQItem {
 // ---------------------------------------------------------------------------
 // Generators
 // ---------------------------------------------------------------------------
-
-/**
- * schema.org/Product — for bookable experience listings.
- *
- * Uses Product (not Event) because these are recurring, open-dated activities
- * without fixed start/end times. Product schema with AggregateRating is more
- * likely to surface star-rating rich results in SERPs. This matches the
- * pattern used by Viator and GetYourGuide.
- */
-export function generateExperienceJsonLd(
-  listing: TExperienceListingDetail,
-  config: SiteConfig,
-): Record<string, unknown> {
-  const priceCurrency = 'AED';
-  const priceValue =
-    listing.priceCents != null ? (listing.priceCents / 100).toFixed(2) : undefined;
-
-  const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: listing.title,
-    description: listing.description,
-    url: `${config.siteUrl}/experience-listings/${listing.handle}`,
-    category: listing.categoryLabel || listing.listingCategory || 'Experiences',
-  };
-
-  // Images
-  const images: string[] = [];
-  if (listing.featuredImage) images.push(listing.featuredImage);
-  if (listing.galleryImgs?.length) images.push(...listing.galleryImgs);
-  if (images.length) schema.image = images;
-
-  // Aggregate rating
-  if (listing.reviewCount > 0 && listing.reviewStart > 0) {
-    schema.aggregateRating = {
-      '@type': 'AggregateRating',
-      ratingValue: listing.reviewStart,
-      reviewCount: listing.reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    };
-  }
-
-  // Offer
-  if (priceValue) {
-    schema.offers = {
-      '@type': 'Offer',
-      price: priceValue,
-      priceCurrency,
-      availability: 'https://schema.org/InStock',
-      url: `${config.siteUrl}/experience-listings/${listing.handle}`,
-    };
-  }
-
-  // Brand (the marketplace itself)
-  schema.brand = {
-    '@type': 'Organization',
-    name: config.siteName,
-  };
-
-  return schema;
-}
 
 /**
  * schema.org/Organization — for the marketplace itself.
