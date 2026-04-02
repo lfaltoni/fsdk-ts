@@ -5,7 +5,11 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  username?: string;
   registration_order?: number;
+  first_login_at?: string | null;
+  last_seen_at?: string | null;
+  platform_role?: string | null;
 }
 
 export interface AuthResponse {
