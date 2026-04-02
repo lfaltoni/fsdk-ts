@@ -60,7 +60,7 @@ Two base HTTP clients that all API modules build on:
 | Client | File | Purpose | Auth |
 |--------|------|---------|------|
 | `apiRequest` | `client.ts` | Requests to the consumer app's backend | CSRF token (auto-fetched) |
-| `foundationRequest` | `foundation-client.ts` | Requests to foundation-sdk's backend | JWT Bearer token from localStorage |
+| `foundationRequest` | `foundation-client.ts` | Requests to foundation-sdk's backend | `credentials: 'include'` (cookies) + JWT Bearer if token exists in localStorage |
 
 Both read their base URLs from `utils/env.ts` (configurable via `window.__API_URL__` / `window.__FOUNDATION_URL__` or env vars).
 
@@ -203,32 +203,19 @@ Architectural patterns that consumer apps need to be aware of when integrating f
 
 ### JWT Bearer Auth vs Flask-Login Sessions
 
-`foundationRequest` sends a JWT Bearer token in the `Authorization` header. However, foundation-sdk blueprints use Flask-Login's `@login_required` decorator, which checks Flask session cookies — not JWT tokens.
+`foundationRequest` sends both `credentials: 'include'` (so browser cookies are attached) and a JWT Bearer token if one exists in localStorage. This means it works for two auth strategies without any configuration:
 
-In local development, the frontend (typically `:3000`) and backend (`:5001`) are different origins. Session cookies set by the backend won't be sent on cross-origin requests due to browser `SameSite` policies (`SameSite=None` requires HTTPS, which dev doesn't have).
+- **Same-origin apps** (e.g., blogmachine — frontend served by or proxied to the same backend): Cookies are sent automatically. No JWT needed. `foundationRequest` works out of the box.
+- **Cross-origin apps** (e.g., frontend on `:3000`, backend on `:5001`): Session cookies won't survive `SameSite` policies (requires HTTPS in dev). The JWT Bearer token handles auth instead.
 
-**Consumer apps must bridge this gap.** The recommended pattern is a `@app.before_request` hook that decodes the JWT from the `Authorization` header and calls `login_user()`:
+For cross-origin setups, foundation-sdk blueprints use Flask-Login's `@login_required` which checks session cookies. Consumer apps must bridge JWT tokens to Flask-Login sessions. foundation-sdk provides a one-liner for this:
 
 ```python
-@app.before_request
-def authenticate_from_jwt():
-    from flask_login import current_user, login_user
-    if current_user.is_authenticated:
-        return
-    auth_header = request.headers.get('Authorization', '')
-    if not auth_header.startswith('Bearer '):
-        return
-    try:
-        import jwt
-        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-        user = db.session.get(User, payload.get('user_id'))
-        if user:
-            login_user(user)
-    except Exception:
-        pass
+from foundation.auth.jwt import configure_jwt_session_bridge
+configure_jwt_session_bridge(app)  # after login_manager.init_app(app)
 ```
 
-This should be a standard pattern in every foundation-sdk consumer app. See `fsdk-starter/server/app.py` for a working implementation.
+This installs a `before_request` hook that decodes the JWT and calls `login_user()`, so all `@login_required` decorators work transparently. Same-origin apps don't need this — cookies handle everything.
 
 ### Optional Domains and 404s
 
