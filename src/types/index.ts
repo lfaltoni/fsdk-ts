@@ -4,3 +4,7 @@ export * from './filters';
 export * from './media';
 export * from './review';
 export * from './billing';
+export * from './mfa';
+export * from './audit';
+export * from './invite';
+export * from './admin';

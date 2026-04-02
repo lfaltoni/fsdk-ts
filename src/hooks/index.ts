@@ -3,3 +3,7 @@ export * from './account';
 export * from './useAccount';
 export * from './reviews';
 export * from './billing';
+export * from './mfa';
+export * from './audit';
+export * from './invites';
+export * from './admin';

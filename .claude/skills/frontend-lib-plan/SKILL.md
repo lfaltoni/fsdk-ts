@@ -1,8 +1,8 @@
 ---
-description: Plan the implementation of a new domain module in frontend-lib (the React companion to foundation-sdk). Covers types, API client, React hook, barrel exports, and package exports. Ensures the module stays agnostic and follows existing conventions.
+description: Write a detailed implementation plan for a frontend-lib feature. Ensures cross-cutting concerns (agnosticism, type-backend parity, logging, error handling, barrel exports, multi-layer impact) are evaluated from the start. Detects emergent concerns and checks impact on foundation-sdk and consumer apps. Produces a plan specific enough for a zero-context agent to implement.
 ---
 
-# /frontend-lib-plan — Frontend-lib Domain Module Planning
+# /frontend-lib-plan — Frontend-lib Implementation Planning
 
 ## User Input
 
@@ -10,7 +10,7 @@ description: Plan the implementation of a new domain module in frontend-lib (the
 $ARGUMENTS
 ```
 
-You **MUST** read the user input carefully — it describes the new domain, feature, or change to plan.
+You **MUST** read the user input carefully — it describes the feature, change, or domain module to plan.
 
 ---
 
@@ -18,11 +18,14 @@ You **MUST** read the user input carefully — it describes the new domain, feat
 
 Before touching any code, answer:
 
-1. **What foundation-sdk domain does this map to?** (e.g., notifications, teams, tenancy)
-2. **Is this truly agnostic?** Would this code work identically for a hotel app, a SaaS dashboard, and an activity marketplace? If not, it belongs in the consumer app, not here.
-3. **What are the key entities/models?** List them with their fields.
-4. **What API endpoints does the foundation-sdk backend expose for this domain?**
-5. **What React state management does the consumer need?** (CRUD, loading, error, pagination?)
+1. **What is this feature?** Summarize in 1-2 sentences.
+2. **What foundation-sdk domain does this map to?** (e.g., mfa, audit, invites, teams, notifications). If none, what backend does it consume?
+3. **Is this a new domain module, an extension of an existing module, or infrastructure/utility work?**
+4. **What are the key entities/models?** List them with their fields.
+5. **What API endpoints does the backend expose for this?** List with HTTP methods and paths.
+6. **What React state management does the consumer need?** (CRUD, loading, error, pagination, auto-fetch vs manual?)
+7. **Does this introduce new dependencies?** Check `package.json` — new deps need justification.
+8. **Does this change any public API surface?** (new exports, changed hook signatures, changed type shapes)
 
 Write this summary out before proceeding.
 
@@ -53,8 +56,6 @@ cat src/api/foundation-client.ts
 cat src/api/index.ts
 cat src/hooks/index.ts
 cat src/types/index.ts
-cat src/utils/index.ts
-cat src/index.ts
 
 # 7. Package exports — subpath exports in package.json
 grep -A 30 '"exports"' package.json
@@ -69,95 +70,218 @@ cat src/utils/logging.ts
 # If the domain uses a decoupled initialization pattern (like billing)
 cat src/api/billing.ts  # initBillingApi() pattern
 
-# If the domain needs a React context/provider (like currency did before extraction)
-# Check hooks/billing/useBilling.ts for the context pattern
-
-# If the corresponding foundation-sdk domain exists
+# If the corresponding foundation-sdk domain exists — read its backend shapes
 cat ../foundation-sdk/foundation/<domain>/DOMAIN.md
-cat ../foundation-sdk/ARCHITECTURE.md  # relevant section
+cat ../foundation-sdk/foundation/<domain>/api/schemas.py       # Marshmallow schemas = response shapes
+cat ../foundation-sdk/foundation/<domain>/api/smorest_<domain>_blueprint.py  # Serialization logic
+
+# If the feature involves auth/session
+cat src/hooks/auth/useAuth.ts
+cat src/api/auth.ts
+
+# If extending an existing frontend-lib module
+cat src/types/<existing>.ts
+cat src/api/<existing>.ts
+cat src/hooks/<existing>/use<Existing>.ts
 ```
 
-## Phase 3: Agnosticism Check
+## Phase 3: Cross-Cutting Concern Checklist
 
-This is the most critical gate. For each piece of planned code, ask:
+For every feature, systematically evaluate each concern. Document your answers in the plan.
 
-| Question | If YES → frontend-lib | If NO → consumer app |
-|----------|----------------------|---------------------|
-| Would a different product need the exact same types? | Types here | Types in consumer |
-| Would a different product call the same endpoints with the same shapes? | API client here | API client in consumer |
-| Would a different product need the same React state management? | Hook here | Hook in consumer |
-| Does the code have hardcoded product-specific values (currencies, categories, scopes)? | Extract those values | Code stays in consumer |
+### 3A. Agnosticism — The Primary Gate
 
-**Grey area pattern:** If the domain is generic but some configuration is product-specific, use the `initBillingApi()` pattern — the module lives in frontend-lib but is initialized by the consumer with product-specific config.
+This is the most critical check. Everything in frontend-lib must be product-agnostic.
 
-**Output:** A table classifying each planned export as "agnostic" or "needs init pattern" or "consumer-only (don't build here)".
+Answer these questions:
 
-## Phase 4: Convention Checklist
+1. **Would a different product (hotel app, SaaS dashboard, marketplace) need the exact same types?**
+   - If no → types belong in the consumer app's `src/lib/types/`
+   - If yes but some fields are product-specific → split: generic fields here, product fields in consumer
 
-### 4A. Types (`src/types/<domain>.ts`)
+2. **Would a different product call the same endpoints with the same shapes?**
+   - If no → API client belongs in consumer
+   - If yes but the base URL varies by product → use `initBillingApi()` decoupled pattern
 
-1. **Mirror foundation-sdk models.** Field names and types must match the JSON the backend returns.
-2. **Export interfaces, not classes.** All types are plain interfaces or type aliases.
-3. **No imports from other files** — type files are self-contained.
-4. **Include request and response types** — not just the entity model.
-   - e.g., `CreateReviewRequest`, `ReviewListResponse`, `ReviewStatsResponse`
-5. **Use `PaginatedResponse<T>` from `types/api.ts`** if the endpoint returns paginated data.
+3. **Does the code have hardcoded product-specific values?** (currencies, categories, scopes, domain-specific enums)
+   - If yes → code belongs in consumer
+   - If partially → extract config, pass via init pattern
 
-### 4B. API Client (`src/api/<domain>.ts`)
+4. **Does the hook manage product-specific workflow?** (booking flow, checkout steps, availability checks)
+   - If yes → hook belongs in consumer, may import agnostic utilities from frontend-lib
 
-1. **Choose the right HTTP client:**
-   - `apiRequest` — for requests to the consumer app's backend (CSRF token, cookie auth)
-   - `foundationRequest` — for requests to foundation-sdk's backend (JWT Bearer token)
-   - If the domain might talk to different backends in different products → use the `initBillingApi(requestFn, urlPrefix)` decoupled pattern
+**Reference:** Read `ARCHITECTURE.md` "What Goes in Frontend-lib vs. Consumer Apps" section for the canonical decision framework.
 
-2. **Structured logging:** Every API client uses `getLogger('domain-api')` at module level.
-   - `logger.info()` before and after each request
-   - `logger.error()` in catch blocks with the error message
-   - Include relevant context (IDs, counts) in log metadata
+**Output for plan:** A table classifying each planned export as "agnostic" / "needs init pattern" / "consumer-only (don't build here)".
 
-3. **Error handling:** Let `ApiError` propagate — do not catch and re-throw with a different type. The hook layer handles error display.
+### 3B. Type-Backend Parity
 
-4. **Export a single object** with all methods (e.g., `export const reviewsApi = { ... }`).
+Types must match what the backend actually returns — not what you wish it returned.
 
-5. **Type every request and response** — import from the types file.
+Answer these questions:
 
-### 4C. React Hook (`src/hooks/<domain>/use<Domain>.ts`)
+1. **Does the foundation-sdk domain have Marshmallow schemas?**
+   - If yes → read `foundation/<domain>/api/schemas.py` — field names and types are the source of truth
+   - If the backend uses `snake_case` field names (marshmallow default) → frontend types must also use `snake_case`
+   - If the backend has a custom serializer that converts to `camelCase` → frontend types use `camelCase`
 
-1. **Thin React wrapper.** Business logic lives in the API client, not the hook.
-2. **Standard state shape:** `{ data, isLoading, error, clearError, ...actions }`
-3. **Use `getLogger('useDomain')` for hook-level logging.**
-4. **Catch `ApiError`** from the API client and expose `error: string | null` state.
-5. **Use `useCallback`** for all action functions to prevent unnecessary re-renders.
-6. **Use `useEffect`** for initial data fetching (with the fetch function in `useCallback`).
-7. **If the hook manages a list with pagination,** accept page/limit params and expose `totalPages`.
-8. **Export the hook and its return type interface.**
+2. **Does the blueprint have a custom serializer function?** (like `_serialize_invite()`, `_serialize_user()`)
+   - If yes → read it to see exact field names in the JSON response
+   - Field names in the serializer override schema field names
 
-### 4D. Barrel Exports
+3. **Are there response envelope patterns?** (like `{ success, data, meta }`)
+   - If yes → type the full envelope, not just the inner data
 
-For every new module, update:
+**Reference:** Read the backend's `api/schemas.py` and blueprint serializer for the domain.
 
-1. `src/types/index.ts` — add `export * from './<domain>'`
-2. `src/api/index.ts` — add `export * from './<domain>'`
-3. `src/hooks/index.ts` — add `export * from './<domain>/use<Domain>'`
-4. `src/index.ts` — no change needed (it re-exports from the barrel files above)
+**Output for plan:** Field-level type definitions with explicit notes on which backend file they mirror.
 
-### 4E. Package Exports (if needed)
+### 3C. HTTP Client Selection
 
-If the new module should be importable via a subpath (e.g., `frontend-lib/<domain>`), add an entry to the `"exports"` map in `package.json`. Most modules don't need this — they're accessible via the main `frontend-lib` import.
+Answer these questions:
 
-Only add a subpath export if:
-- The module is server-only (like `server/` or `email/`)
-- The module is useful standalone without pulling in all of frontend-lib
+1. **Does this module talk to foundation-sdk endpoints?** (paths like `/api/auth/*`, `/api/reviews/*`, `/api/admin/*`)
+   - If yes → use `foundationRequest` (JWT Bearer auth)
 
-### 4F. Logging
+2. **Does this module talk to the consumer app's backend?** (paths like `/api/v1/bookings/*`)
+   - If yes → use `apiRequest` (CSRF token auth)
+   - NOTE: if this is true, the module probably belongs in the consumer app, not frontend-lib
 
-- API clients: `const logger = getLogger('<domain>-api')`
-- Hooks: `const logger = getLogger('use<Domain>')`
-- Log INFO for successful operations with relevant IDs
-- Log ERROR for failures with error message
-- Never log sensitive data (tokens, passwords, PII)
+3. **Might different consumers route these endpoints through different backends?**
+   - If yes → use the `initBillingApi(requestFn, urlPrefix)` decoupled pattern
 
-## Phase 5: Write the Implementation Plan
+**Reference:** Read `src/api/client.ts` and `src/api/foundation-client.ts` for the two client patterns.
+
+**Output for plan:** Which HTTP client each API method uses and why.
+
+### 3D. Error Handling
+
+Answer these questions:
+
+1. **Does the backend return structured error responses?** (like `{ message: "...", errors: {...} }`)
+   - If yes → the API client should let `foundationRequest`/`apiRequest` throw — they already parse error messages
+   - If the backend has non-standard error shapes → document how to extract the message
+
+2. **Are there domain-specific error states the hook should expose?** (like "MFA not configured", "invite expired")
+   - If yes → expose as specific state fields, not just generic `error: string`
+
+**Reference:** Read `src/api/foundation-client.ts` lines 44-48 for how errors are thrown.
+
+**Output for plan:** Error handling approach for each API method and hook.
+
+### 3E. Logging
+
+Answer these questions:
+
+1. **Does this feature add new API client files?**
+   - If yes → each needs `const logger = getLogger('<domain>-api')` at module level
+   - Log `info` before and after each request with relevant IDs
+   - Log `error` in catch blocks with the error message
+   - Never log sensitive data (tokens, passwords, email addresses in MFA flows)
+
+2. **Does this feature add new hook files?**
+   - If yes → each needs `const logger = getLogger('use<Domain>')` at module level
+   - Log `info` for successful state changes
+   - Log `error` for failures
+
+**Reference:** Read `src/utils/logging.ts` for `getLogger` API. Read `src/api/reviews.ts` for the canonical logging pattern.
+
+**Output for plan:** Logger context strings and key log points for each new file.
+
+### 3F. Barrel Exports and Package Exports
+
+Answer these questions:
+
+1. **Does this feature add new files that consumers import?**
+   - If yes → add re-exports to the relevant barrel files:
+     - `src/types/index.ts` for types
+     - `src/api/index.ts` for API clients
+     - `src/hooks/index.ts` for hooks
+   - `src/index.ts` re-exports from these barrels — usually no change needed
+
+2. **Does this feature need a standalone subpath export?** (like `frontend-lib/email` or `frontend-lib/server`)
+   - Only if the module is server-only or useful standalone without pulling in all of frontend-lib
+   - Most modules don't need this — they're accessible via the main `frontend-lib` import
+
+3. **Do new exports conflict with existing ones?** (name collisions across modules)
+   - Check existing barrel files for conflicts before adding
+
+**Reference:** Read current `src/api/index.ts`, `src/hooks/index.ts`, `src/types/index.ts`. Read `package.json` `"exports"` map.
+
+**Output for plan:** Exact lines to add to each barrel file. Package.json changes if applicable.
+
+### 3G. Testing and Build Verification
+
+Answer these questions:
+
+1. **Does the build pass after changes?**
+   - `npm run build` must succeed (both ESM and CJS outputs)
+   - This is the minimum bar — no exceptions
+
+2. **Can consumer apps import the new exports?**
+   - After building, verify imports resolve from a consumer app
+
+3. **Do existing exports still work?**
+   - Barrel export additions must not break existing imports
+
+**Output for plan:** Verification commands to run after implementation.
+
+## Phase 4: Emergent Concern Check
+
+Before writing the plan, ask yourself:
+
+1. **Does this feature introduce a new pattern that other frontend-lib modules should adopt?**
+   - A new error handling pattern, a new state shape convention, a new initialization pattern
+   - If YES: document the pattern and note which existing modules could benefit (but don't retroactively change them unless asked)
+
+2. **Does this feature introduce a new utility that multiple modules could share?**
+   - A shared pagination helper, a shared query-string builder, a shared response parser
+   - If YES: put it in `src/utils/` and import from there, not inline in the module
+
+3. **Does this feature change how frontend-lib modules relate to foundation-sdk domains?**
+   - A new convention for how types mirror backend schemas
+   - A new convention for how hooks auto-fetch vs manual-fetch
+   - If YES: document in the plan and consider updating ARCHITECTURE.md conventions section
+
+4. **Does this feature warrant updating this skill's checklist?**
+   - If the concern you just identified would apply to ALL future modules, it should become a new 3X section in this skill
+   - If YES: include a work package in the plan to update this skill file
+
+If you answered YES to any of the above, include a "Convention Updates" work package in the plan.
+
+## Phase 5: Multi-Layer Impact
+
+frontend-lib sits between foundation-sdk (below) and consumer apps (above).
+
+```
+Layer Map:
+- This repo: frontend-lib (React companion to foundation-sdk)
+- Depends on: foundation-sdk (defines the backend API shapes this lib wraps)
+- Depended on by: rihla-web frontend, fsdk-starter, any future foundation-sdk consumer frontend
+- Parallel to: (none — it IS the frontend layer for foundation-sdk)
+```
+
+For this specific feature, answer:
+
+1. **Does the foundation-sdk domain this maps to have stable API endpoints?**
+   - If the SDK endpoints are brand new or in flux → note that types may need updating when the SDK stabilizes
+   - If the SDK domain has no HTTP endpoints yet → this module may be premature
+
+2. **Does this change affect consumer apps that already import from frontend-lib?**
+   - New additive exports → no consumer impact (backwards compatible)
+   - Changed type shapes or hook signatures → breaking change, document migration
+   - Changed API client behavior → consumer behavior changes silently, document carefully
+
+3. **Does the foundation-sdk domain have a DOMAIN.md that lists "Frontend-lib module" in its cross-domain section?**
+   - If not → after implementation, update the SDK's DOMAIN.md to reference this new module
+
+4. **Do any consumer apps need wiring changes to use this?**
+   - Usually no (just `import { useNewHook } from 'frontend-lib'`)
+   - If the module uses the init pattern → consumers must call the init function
+
+If any cross-layer changes are needed, they must be explicit work packages in the plan.
+
+## Phase 6: Write the Implementation Plan
 
 ### Plan structure
 
@@ -173,7 +297,7 @@ Table showing each export and why it's agnostic (or why it uses the init pattern
 ### WP1: Types — `src/types/<domain>.ts`
 - List every interface/type to define
 - Show the key fields for each
-- Note which match foundation-sdk response shapes
+- Note which backend file they mirror (schema or serializer)
 
 ### WP2: API Client — `src/api/<domain>.ts`
 - Which HTTP client (apiRequest vs foundationRequest vs init pattern)
@@ -183,14 +307,36 @@ Table showing each export and why it's agnostic (or why it uses the init pattern
 ### WP3: React Hook — `src/hooks/<domain>/use<Domain>.ts`
 - Return type interface
 - State fields (data, isLoading, error, etc.)
-- Action functions
-- Initial fetch behavior (useEffect or manual)
+- Action functions with signatures
+- Initial fetch behavior (useEffect or manual trigger)
 
 ### WP4: Barrel Exports
 - Exact lines to add to each index.ts
 
 ### WP5: Package Exports (if applicable)
 - Exact entry to add to package.json exports map
+
+### WP6: Convention Updates (if emergent concern detected in Phase 4)
+- What pattern/convention changed
+- Which files to update (ARCHITECTURE.md, skill files)
+
+### WP7: Cross-Layer Updates (if multi-layer impact detected in Phase 5)
+- Foundation-sdk DOMAIN.md updates
+- Consumer app documentation
+
+## Cross-Cutting Concerns Summary
+
+### Type-Backend Parity
+| Type | Backend Source | Field Convention | Notes |
+|------|--------------|-----------------|-------|
+
+### HTTP Client Usage
+| API Method | Client | Auth | Endpoint |
+|-----------|--------|------|----------|
+
+### Logging Points
+| File | Logger Context | Key Log Points |
+|------|---------------|----------------|
 
 ## Files to Modify
 | File | WP | Changes |
@@ -206,10 +352,20 @@ List files the implementing agent MUST read in full.
 4. Barrel exports (depends on all above)
 5. Build verification: `npm run build`
 
+## Backwards Compatibility
+What existing consumers must change (ideally nothing).
+
 ## Verification
 - `npm run build` passes (both ESM and CJS)
 - Consumer app can import new exports from `'frontend-lib'`
 - Consumer app builds successfully
+- Types match backend response shapes (verified against schemas.py / serializer)
+
+## Self-Audit
+After implementation, check:
+- Did this work introduce a new pattern that should be in ARCHITECTURE.md?
+- Did this work reveal a gap in this skill's checklist?
+- Does the foundation-sdk DOMAIN.md need updating to reference this module?
 ```
 
 ### Plan rules
@@ -217,8 +373,10 @@ List files the implementing agent MUST read in full.
 - **File paths are relative to `frontend-lib/`.** e.g., `src/api/notifications.ts`
 - **Follow existing patterns exactly.** Read `src/api/reviews.ts` and `src/hooks/reviews/useReviews.ts` as the canonical example — match their structure, error handling, and logging.
 - **Reference living docs, don't duplicate them.** Say "follow the API client pattern in `src/api/reviews.ts`" not copy-paste the pattern.
-- **Types must match foundation-sdk backend responses.** If unsure, read the foundation-sdk domain's models or DOMAIN.md.
+- **Types must match foundation-sdk backend responses.** Read the backend's `api/schemas.py` and blueprint serializer. If the backend returns `snake_case`, types use `snake_case`. Do not assume camelCase.
 - **Never add product-specific code.** If you find yourself writing Rihla-specific types, hardcoded values, or product-specific endpoints, stop — that code belongs in the consumer app's `src/lib/`.
 - **The init pattern (`initBillingApi`)** is for modules that are architecturally agnostic but need per-consumer configuration. Use it sparingly.
-- **Build verification is mandatory.** The plan must end with `npm run build` in both frontend-lib and a consumer app.
-- **Include "Files to Read Before Implementation"** — list every file the implementing agent must read in full. At minimum: the ARCHITECTURE.md, the canonical example (reviews), and the corresponding foundation-sdk domain docs.
+- **Build verification is mandatory.** The plan must end with `npm run build`.
+- **Include "Files to Read Before Implementation"** — at minimum: ARCHITECTURE.md, the canonical example (reviews), and the corresponding foundation-sdk domain's `api/schemas.py`.
+- **Plan for documentation updates.** Note which files need doc updates after implementation — ARCHITECTURE.md module tables, foundation-sdk DOMAIN.md cross-references.
+- **Plan for self-audit.** The last section of every plan checks whether the work invalidated any conventions or skills.

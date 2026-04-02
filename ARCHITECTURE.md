@@ -73,6 +73,10 @@ Domain API modules:
 | `mediaApi` | `media.ts` | direct fetch | `/api/media/*` (upload, gallery, delete, reorder, set primary) |
 | `reviewsApi` | `reviews.ts` | `foundationRequest` | `/api/reviews/*` (CRUD, helpful votes, replies, flagging) |
 | `billingApi` | `billing.ts` | configurable | Stripe subscriptions (checkout, portal, status) |
+| `mfaApi` | `mfa.ts` | `foundationRequest` | `/api/mfa/*` (status, enroll, confirm, unenroll, challenge, verify) |
+| `auditApi` | `audit.ts` | `foundationRequest` | `/api/admin/audit/*` (query, actor timeline, entity history) |
+| `invitesApi` | `invites.ts` | `foundationRequest` | `/api/admin/invites/*` + `/api/invites/*` (CRUD, validate, consume) |
+| `adminApi` | `admin.ts` | `foundationRequest` | `/api/admin/users/*` (list, detail, status, resend MFA) |
 
 `billingApi` is special — it uses `initBillingApi(requestFn, urlPrefix)` so the consumer can configure which HTTP client and URL prefix to use. This is the pattern to follow for any module that might talk to different backends in different products.
 
@@ -91,6 +95,10 @@ Domain API modules:
 | `useAccount()` | `useAccount.ts` | Composite: combines useUser + useProfile + useProfilePicture |
 | `useReviews()` | `reviews/useReviews.ts` | Reviews for any entity: CRUD, replies, helpful votes, pagination |
 | `useBilling()` | `billing/useBilling.ts` | Subscription state + actions: `checkout()`, `manageSubscription()` |
+| `useMfa()` | `mfa/useMfa.ts` | MFA enrollment + challenges: `beginEnrollment()`, `confirmEnrollment()`, `unenroll()`, `sendChallenge()`, `verifyChallenge()`. Auto-fetches status. |
+| `useAudit()` | `audit/useAudit.ts` | Audit log queries: `query()`, `getActorTimeline()`, `getEntityHistory()`. Manual trigger. |
+| `useInvites()` | `invites/useInvites.ts` | Platform invite management: `create()`, `listAll()`, `listPending()`, `revoke()`, `validate()`, `consume()`. Manual trigger. |
+| `useAdmin()` | `admin/useAdmin.ts` | Admin user management: `listUsers()`, `getUserDetail()`, `setAccountStatus()`, `resendMfa()`. Manual trigger. |
 
 ### Type Definitions (`src/types/`)
 
@@ -102,6 +110,10 @@ Domain API modules:
 | `media.ts` | `MediaItem`, `MediaUploadResponse` | foundation-sdk `media` domain |
 | `review.ts` | `Review`, `ReviewListResponse`, `ReviewStatsResponse`, `CreateReviewRequest`, etc. | foundation-sdk `reviews` domain |
 | `billing.ts` | `Subscription`, `BillingSummary`, `AvailablePlan`, `BillingApi`, `PlanTier` | foundation-sdk `billing` domain |
+| `mfa.ts` | `MfaStatusResponse`, `MfaResultResponse`, `MfaEnrollRequest`, `MfaCodeRequest` | foundation-sdk `mfa` domain |
+| `audit.ts` | `AuditEntry`, `AuditPageResponse`, `AuditQueryParams`, `AuditPaginationMeta` | foundation-sdk `audit` domain |
+| `invite.ts` | `PlatformInvite`, `InviteListResponse`, `InviteValidateResponse`, `InviteCreateRequest` | foundation-sdk `invites` domain |
+| `admin.ts` | `AdminUser`, `AdminUserDetail`, `AdminUserListResponse`, `AdminUserListParams` | foundation-sdk `admin` domain |
 
 ### Utilities (`src/utils/`)
 
