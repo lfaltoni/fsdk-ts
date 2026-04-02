@@ -193,6 +193,51 @@ Logs are stored in localStorage and can be exported via `window.getFrontendLogs(
 
 Defaults are dev-mode convenience values. Consumer apps override these via environment variables or window globals.
 
+## Consumer Integration Notes
+
+Architectural patterns that consumer apps need to be aware of when integrating frontend-lib with a foundation-sdk backend.
+
+### Auth State Initialization
+
+`useAuth()` synchronously reads the user from localStorage on first render. This means auth guards (`if (!isAuthenticated) redirect`) work correctly without race conditions. If you see flash-redirects after login, verify that `storage.setUser()` is called before navigation and that `useAuth` is using the synchronous `getInitialUser` pattern (not a useEffect-only approach).
+
+### JWT Bearer Auth vs Flask-Login Sessions
+
+`foundationRequest` sends a JWT Bearer token in the `Authorization` header. However, foundation-sdk blueprints use Flask-Login's `@login_required` decorator, which checks Flask session cookies — not JWT tokens.
+
+In local development, the frontend (typically `:3000`) and backend (`:5001`) are different origins. Session cookies set by the backend won't be sent on cross-origin requests due to browser `SameSite` policies (`SameSite=None` requires HTTPS, which dev doesn't have).
+
+**Consumer apps must bridge this gap.** The recommended pattern is a `@app.before_request` hook that decodes the JWT from the `Authorization` header and calls `login_user()`:
+
+```python
+@app.before_request
+def authenticate_from_jwt():
+    from flask_login import current_user, login_user
+    if current_user.is_authenticated:
+        return
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return
+    try:
+        import jwt
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user = db.session.get(User, payload.get('user_id'))
+        if user:
+            login_user(user)
+    except Exception:
+        pass
+```
+
+This should be a standard pattern in every foundation-sdk consumer app. See `fsdk-starter/server/app.py` for a working implementation.
+
+### Optional Domains and 404s
+
+foundation-sdk domains like MFA, billing, and tenancy are opt-in. When not configured, their blueprints are not registered, so endpoints return 404. Frontend code using hooks for optional domains (`useMfa`, `useBilling`) should handle 404 responses gracefully — display a "not configured" message rather than a generic error.
+
+### Media Gallery 404 on Empty
+
+The media blueprint returns 404 when no media exists for an entity, rather than 200 with an empty array. Frontend code calling `mediaApi.getGallery()` should catch 404 and treat it as an empty gallery.
+
 ## Migration Complete (2026-03-31)
 
 The following Rihla-specific modules were extracted to the Rihla consumer app (`rihla-web/frontend/chisfis-nextjs/src/lib/`). They now import agnostic utilities (logging, HTTP clients, `ApiError`) from frontend-lib.

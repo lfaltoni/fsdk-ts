@@ -21,8 +21,22 @@ interface UseAuthReturn {
 /**
  * Hook for managing authentication state
  */
+// Synchronously read stored user so the very first render already knows auth state.
+// This prevents auth guards from briefly seeing isAuthenticated=false and redirecting.
+function getInitialUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem('user');
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return parsed?.user_id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(getInitialUser);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
