@@ -152,7 +152,7 @@ export function getLogger(context: string): FrontendLogger {
 }
 
 // Default logger for general use
-export const logger = getLogger('frontend-lib');
+export const logger = getLogger('fsdk-ts');
 
 // Development utilities for debugging
 if (typeof window !== 'undefined') {

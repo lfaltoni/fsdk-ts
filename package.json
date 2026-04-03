@@ -1,5 +1,5 @@
 {
-  "name": "frontend-lib",
+  "name": "fsdk-ts",
   "version": "1.0.0",
   "description": "Reusable frontend library for foundation-sdk applications",
   "main": "dist/cjs/index.js",

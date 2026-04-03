@@ -1,11 +1,11 @@
-# Frontend Library
+# fsdk-ts
 
 Reusable frontend library for Foundation-SDK applications, providing authentication, user management, and utility functions.
 
 ## Installation
 
 ```bash
-npm install frontend-lib
+npm install fsdk-ts
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install frontend-lib
 ### Authentication
 
 ```typescript
-import { useLogin, useAuth } from 'frontend-lib';
+import { useLogin, useAuth } from 'fsdk-ts';
 
 // Login Form Component
 function LoginForm() {
@@ -62,7 +62,7 @@ function App() {
 ### API Calls
 
 ```typescript
-import { authApi } from 'frontend-lib';
+import { authApi } from 'fsdk-ts';
 
 // Direct API usage
 const handleLogin = async () => {
@@ -84,7 +84,7 @@ const handleLogin = async () => {
 ### Storage Utilities
 
 ```typescript
-import { storage } from 'frontend-lib';
+import { storage } from 'fsdk-ts';
 
 // Manual storage management
 storage.setUser(userData);
@@ -96,7 +96,7 @@ const hasSession = storage.hasValidSession();
 ### Logging
 
 ```typescript
-import { getLogger } from 'frontend-lib';
+import { getLogger } from 'fsdk-ts';
 
 const logger = getLogger('MyComponent');
 

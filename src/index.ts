@@ -1,4 +1,4 @@
-// Frontend Library for Foundation-SDK Applications
+// fsdk-ts — TypeScript Library for Foundation-SDK Applications
 // Export all modules for easy consumption
 
 export * from './types';

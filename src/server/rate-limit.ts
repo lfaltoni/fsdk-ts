@@ -2,7 +2,7 @@
  * In-memory sliding window rate limiter for Next.js API routes.
  *
  * Usage:
- *   import { createRateLimiter } from 'frontend-lib/server'
+ *   import { createRateLimiter } from 'fsdk-ts/server'
  *
  *   const limiter = createRateLimiter({ windowMs: 60_000, max: 3 })
  *

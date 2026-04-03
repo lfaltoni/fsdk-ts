@@ -5,7 +5,7 @@
  * and URL prefix. Then billingApi is used everywhere (imported directly by hooks).
  *
  * Usage:
- *   import { initBillingApi, billingApi } from 'frontend-lib';
+ *   import { initBillingApi, billingApi } from 'fsdk-ts';
  *   // At startup:
  *   initBillingApi(apiRequest, '/bm/billing/');
  *   // In components/hooks:

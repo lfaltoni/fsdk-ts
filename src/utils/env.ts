@@ -1,4 +1,4 @@
-// Environment configuration for frontend-lib
+// Environment configuration for fsdk-ts
 
 export interface EnvConfig {
   apiUrl: string;

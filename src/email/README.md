@@ -1,4 +1,4 @@
-# Email Domain — `frontend-lib/email`
+# Email Domain — `fsdk-ts/email`
 
 A reusable, server-side email module for all Next.js apps in this monorepo. Built on **nodemailer** with a clean separation between transport, templates, and types so each concern can grow independently.
 
@@ -6,7 +6,7 @@ A reusable, server-side email module for all Next.js apps in this monorepo. Buil
 
 ## Why it lives here
 
-`frontend-lib` is the shared JS/TS layer across projects. Email sending is the first server-side concern added to it, following the same pattern as `foundation-sdk` (Python) — centralise cross-cutting infrastructure, let consumer apps stay thin.
+`fsdk-ts` is the shared JS/TS layer across projects. Email sending is the first server-side concern added to it, following the same pattern as `foundation-sdk` (Python) — centralise cross-cutting infrastructure, let consumer apps stay thin.
 
 The alternatives considered:
 - **In the Next.js app** (`src/lib/email/`) — simple but not reusable; every new app would copy-paste.
@@ -45,7 +45,7 @@ Templates are **pure functions** — no imports from the transport layer, no net
 
 ### 1. Ensure nodemailer is installed in the consumer app
 
-`nodemailer` is a peer dependency of `frontend-lib`. Add it to the consuming app's `package.json`:
+`nodemailer` is a peer dependency of `fsdk-ts`. Add it to the consuming app's `package.json`:
 
 ```json
 "nodemailer": ">=6.0.0"
@@ -70,8 +70,8 @@ CONTACT_EMAIL=inbox@yourapp.com # Where submissions are delivered
 
 ```ts
 // src/app/api/contact/route.ts
-import { sendEmail, hostRegistrationTemplate } from 'frontend-lib/email'
-import type { HostRegistrationData } from 'frontend-lib/email'
+import { sendEmail, hostRegistrationTemplate } from 'fsdk-ts/email'
+import type { HostRegistrationData } from 'fsdk-ts/email'
 ```
 
 > **Never import this module in a Client Component or client-side code.** `nodemailer` is Node.js-only. Next.js will throw a build error if you try — treat that as the safeguard.
@@ -96,7 +96,7 @@ await sendEmail({
 1. Create `src/email/templates/your-template.ts`
 2. Export a function that accepts a typed data object and returns `{ html: string; text: string }`
 3. Export it from `src/email/index.ts`
-4. Rebuild: `npm run build` in `frontend-lib`
+4. Rebuild: `npm run build` in `fsdk-ts`
 
 ```ts
 // src/email/templates/your-template.ts
@@ -116,12 +116,12 @@ Always provide both `html` and `text`. The plain-text version is used by email c
 
 ## Adding a new consumer app
 
-1. Add `"frontend-lib": "file:../path/to/frontend-lib"` to the app's `package.json`
+1. Add `"fsdk-ts": "file:../path/to/fsdk-ts"` to the app's `package.json`
 2. Install nodemailer in the app
 3. Add the SMTP env vars
-4. Import from `frontend-lib/email` in server-only files
+4. Import from `fsdk-ts/email` in server-only files
 
-No changes to `frontend-lib` are needed unless a new template is required.
+No changes to `fsdk-ts` are needed unless a new template is required.
 
 ---
 
@@ -140,6 +140,6 @@ When a second or third app starts using this module, promote it:
 1. Copy `src/email/` to a new repo/workspace `packages/email`
 2. Update `package.json` name to `@yourorg/email`
 3. Publish to npm (private registry or public)
-4. Replace `from 'frontend-lib/email'` with `from '@yourorg/email'` in all consumers
+4. Replace `from 'fsdk-ts/email'` with `from '@yourorg/email'` in all consumers
 
 The module's internal structure does not need to change.

@@ -1,16 +1,16 @@
-# Frontend-lib Architecture
+# fsdk-ts Architecture
 
 ## What This Library Is
 
-Frontend-lib is the **React companion to foundation-sdk**. Where foundation-sdk provides backend services (auth, media, billing, reviews, etc.) as a Python library, frontend-lib provides the corresponding React hooks, API clients, and TypeScript types for any frontend that consumes those services.
+fsdk-ts is the **React companion to foundation-sdk**. Where foundation-sdk provides backend services (auth, media, billing, reviews, etc.) as a Python library, fsdk-ts provides the corresponding React hooks, API clients, and TypeScript types for any frontend that consumes those services.
 
-**Any app built on foundation-sdk should use frontend-lib for its frontend.** It is not specific to any single product — it provides the primitives that every foundation-sdk consumer needs.
+**Any app built on foundation-sdk should use fsdk-ts for its frontend.** It is not specific to any single product — it provides the primitives that every foundation-sdk consumer needs.
 
-## What Goes in Frontend-lib vs. Consumer Apps
+## What Goes in fsdk-ts vs. Consumer Apps
 
 This is the most important architectural decision in the library.
 
-### Frontend-lib owns (agnostic)
+### fsdk-ts owns (agnostic)
 
 Code that maps directly to a **foundation-sdk domain** or is **universally useful infrastructure**:
 
@@ -49,7 +49,7 @@ Some things feel generic but carry hidden product assumptions:
 | Gift card scoping | Consumer | `'platform' \| 'provider' \| 'experience'` is a product hierarchy |
 | Slot-based availability | Consumer | Not all products use time slots |
 
-When in doubt, start in the consumer app. It's easy to promote code to frontend-lib later; extracting code that leaked in is harder.
+When in doubt, start in the consumer app. It's easy to promote code to fsdk-ts later; extracting code that leaked in is harder.
 
 ## Module Reference
 
@@ -148,18 +148,18 @@ The library uses conditional exports in `package.json` to support tree-shaking a
 
 | Import Path | What You Get | Environment |
 |-------------|-------------|-------------|
-| `frontend-lib` | Everything (hooks, API clients, types, utils) | Client |
-| `frontend-lib/types` | Type definitions only | Any |
-| `frontend-lib/utils/pagination` | Pagination utilities only | Any |
-| `frontend-lib/seo` | SEO JSON-LD generators | Any |
-| `frontend-lib/email` | Email service | Server only |
-| `frontend-lib/server` | Rate limiting | Server only |
+| `fsdk-ts` | Everything (hooks, API clients, types, utils) | Client |
+| `fsdk-ts/types` | Type definitions only | Any |
+| `fsdk-ts/utils/pagination` | Pagination utilities only | Any |
+| `fsdk-ts/seo` | SEO JSON-LD generators | Any |
+| `fsdk-ts/email` | Email service | Server only |
+| `fsdk-ts/server` | Rate limiting | Server only |
 
 ## Conventions
 
-### Adding a new foundation-sdk domain to frontend-lib
+### Adding a new foundation-sdk domain to fsdk-ts
 
-When foundation-sdk adds a new domain (e.g., `foundation/notifications/`), frontend-lib should get:
+When foundation-sdk adds a new domain (e.g., `foundation/notifications/`), fsdk-ts should get:
 
 1. **Types** in `src/types/<domain>.ts` — mirrors the domain's models
 2. **API client** in `src/api/<domain>.ts` — wraps the domain's HTTP endpoints
@@ -195,7 +195,7 @@ Defaults are dev-mode convenience values. Consumer apps override these via envir
 
 ## Consumer Integration Notes
 
-Architectural patterns that consumer apps need to be aware of when integrating frontend-lib with a foundation-sdk backend.
+Architectural patterns that consumer apps need to be aware of when integrating fsdk-ts with a foundation-sdk backend.
 
 ### Auth State Initialization
 
@@ -227,7 +227,7 @@ The media blueprint returns 404 when no media exists for an entity, rather than 
 
 ## Migration Complete (2026-03-31)
 
-The following Rihla-specific modules were extracted to the Rihla consumer app (`rihla-web/frontend/chisfis-nextjs/src/lib/`). They now import agnostic utilities (logging, HTTP clients, `ApiError`) from frontend-lib.
+The following Rihla-specific modules were extracted to the Rihla consumer app (`rihla-web/frontend/chisfis-nextjs/src/lib/`). They now import agnostic utilities (logging, HTTP clients, `ApiError`) from fsdk-ts.
 
 | Moved Module | Now at `src/lib/` | Why it's product-specific |
 |--------|-------------|--------------------------|

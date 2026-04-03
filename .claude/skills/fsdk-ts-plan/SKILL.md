@@ -1,8 +1,8 @@
 ---
-description: Write a detailed implementation plan for a frontend-lib feature. Ensures cross-cutting concerns (agnosticism, type-backend parity, logging, error handling, barrel exports, multi-layer impact) are evaluated from the start. Detects emergent concerns and checks impact on foundation-sdk and consumer apps. Produces a plan specific enough for a zero-context agent to implement.
+description: Write a detailed implementation plan for a fsdk-ts feature. Ensures cross-cutting concerns (agnosticism, type-backend parity, logging, error handling, barrel exports, multi-layer impact) are evaluated from the start. Detects emergent concerns and checks impact on foundation-sdk and consumer apps. Produces a plan specific enough for a zero-context agent to implement.
 ---
 
-# /frontend-lib-plan — Frontend-lib Implementation Planning
+# /fsdk-ts-plan — fsdk-ts Implementation Planning
 
 ## User Input
 
@@ -79,7 +79,7 @@ cat ../foundation-sdk/foundation/<domain>/api/smorest_<domain>_blueprint.py  # S
 cat src/hooks/auth/useAuth.ts
 cat src/api/auth.ts
 
-# If extending an existing frontend-lib module
+# If extending an existing fsdk-ts module
 cat src/types/<existing>.ts
 cat src/api/<existing>.ts
 cat src/hooks/<existing>/use<Existing>.ts
@@ -91,7 +91,7 @@ For every feature, systematically evaluate each concern. Document your answers i
 
 ### 3A. Agnosticism — The Primary Gate
 
-This is the most critical check. Everything in frontend-lib must be product-agnostic.
+This is the most critical check. Everything in fsdk-ts must be product-agnostic.
 
 Answer these questions:
 
@@ -108,9 +108,9 @@ Answer these questions:
    - If partially → extract config, pass via init pattern
 
 4. **Does the hook manage product-specific workflow?** (booking flow, checkout steps, availability checks)
-   - If yes → hook belongs in consumer, may import agnostic utilities from frontend-lib
+   - If yes → hook belongs in consumer, may import agnostic utilities from fsdk-ts
 
-**Reference:** Read `ARCHITECTURE.md` "What Goes in Frontend-lib vs. Consumer Apps" section for the canonical decision framework.
+**Reference:** Read `ARCHITECTURE.md` "What Goes in fsdk-ts vs. Consumer Apps" section for the canonical decision framework.
 
 **Output for plan:** A table classifying each planned export as "agnostic" / "needs init pattern" / "consumer-only (don't build here)".
 
@@ -145,7 +145,7 @@ Answer these questions:
 
 2. **Does this module talk to the consumer app's backend?** (paths like `/api/v1/bookings/*`)
    - If yes → use `apiRequest` (CSRF token auth)
-   - NOTE: if this is true, the module probably belongs in the consumer app, not frontend-lib
+   - NOTE: if this is true, the module probably belongs in the consumer app, not fsdk-ts
 
 3. **Might different consumers route these endpoints through different backends?**
    - If yes → use the `initBillingApi(requestFn, urlPrefix)` decoupled pattern
@@ -199,9 +199,9 @@ Answer these questions:
      - `src/hooks/index.ts` for hooks
    - `src/index.ts` re-exports from these barrels — usually no change needed
 
-2. **Does this feature need a standalone subpath export?** (like `frontend-lib/email` or `frontend-lib/server`)
-   - Only if the module is server-only or useful standalone without pulling in all of frontend-lib
-   - Most modules don't need this — they're accessible via the main `frontend-lib` import
+2. **Does this feature need a standalone subpath export?** (like `fsdk-ts/email` or `fsdk-ts/server`)
+   - Only if the module is server-only or useful standalone without pulling in all of fsdk-ts
+   - Most modules don't need this — they're accessible via the main `fsdk-ts` import
 
 3. **Do new exports conflict with existing ones?** (name collisions across modules)
    - Check existing barrel files for conflicts before adding
@@ -230,7 +230,7 @@ Answer these questions:
 
 Before writing the plan, ask yourself:
 
-1. **Does this feature introduce a new pattern that other frontend-lib modules should adopt?**
+1. **Does this feature introduce a new pattern that other fsdk-ts modules should adopt?**
    - A new error handling pattern, a new state shape convention, a new initialization pattern
    - If YES: document the pattern and note which existing modules could benefit (but don't retroactively change them unless asked)
 
@@ -238,7 +238,7 @@ Before writing the plan, ask yourself:
    - A shared pagination helper, a shared query-string builder, a shared response parser
    - If YES: put it in `src/utils/` and import from there, not inline in the module
 
-3. **Does this feature change how frontend-lib modules relate to foundation-sdk domains?**
+3. **Does this feature change how fsdk-ts modules relate to foundation-sdk domains?**
    - A new convention for how types mirror backend schemas
    - A new convention for how hooks auto-fetch vs manual-fetch
    - If YES: document in the plan and consider updating ARCHITECTURE.md conventions section
@@ -251,11 +251,11 @@ If you answered YES to any of the above, include a "Convention Updates" work pac
 
 ## Phase 5: Multi-Layer Impact
 
-frontend-lib sits between foundation-sdk (below) and consumer apps (above).
+fsdk-ts sits between foundation-sdk (below) and consumer apps (above).
 
 ```
 Layer Map:
-- This repo: frontend-lib (React companion to foundation-sdk)
+- This repo: fsdk-ts (React companion to foundation-sdk)
 - Depends on: foundation-sdk (defines the backend API shapes this lib wraps)
 - Depended on by: rihla-web frontend, fsdk-starter, any future foundation-sdk consumer frontend
 - Parallel to: (none — it IS the frontend layer for foundation-sdk)
@@ -267,16 +267,16 @@ For this specific feature, answer:
    - If the SDK endpoints are brand new or in flux → note that types may need updating when the SDK stabilizes
    - If the SDK domain has no HTTP endpoints yet → this module may be premature
 
-2. **Does this change affect consumer apps that already import from frontend-lib?**
+2. **Does this change affect consumer apps that already import from fsdk-ts?**
    - New additive exports → no consumer impact (backwards compatible)
    - Changed type shapes or hook signatures → breaking change, document migration
    - Changed API client behavior → consumer behavior changes silently, document carefully
 
-3. **Does the foundation-sdk domain have a DOMAIN.md that lists "Frontend-lib module" in its cross-domain section?**
+3. **Does the foundation-sdk domain have a DOMAIN.md that lists "fsdk-ts module" in its cross-domain section?**
    - If not → after implementation, update the SDK's DOMAIN.md to reference this new module
 
 4. **Do any consumer apps need wiring changes to use this?**
-   - Usually no (just `import { useNewHook } from 'frontend-lib'`)
+   - Usually no (just `import { useNewHook } from 'fsdk-ts'`)
    - If the module uses the init pattern → consumers must call the init function
 
 If any cross-layer changes are needed, they must be explicit work packages in the plan.
@@ -357,7 +357,7 @@ What existing consumers must change (ideally nothing).
 
 ## Verification
 - `npm run build` passes (both ESM and CJS)
-- Consumer app can import new exports from `'frontend-lib'`
+- Consumer app can import new exports from `'fsdk-ts'`
 - Consumer app builds successfully
 - Types match backend response shapes (verified against schemas.py / serializer)
 
@@ -370,7 +370,7 @@ After implementation, check:
 
 ### Plan rules
 
-- **File paths are relative to `frontend-lib/`.** e.g., `src/api/notifications.ts`
+- **File paths are relative to `fsdk-ts/`.** e.g., `src/api/notifications.ts`
 - **Follow existing patterns exactly.** Read `src/api/reviews.ts` and `src/hooks/reviews/useReviews.ts` as the canonical example — match their structure, error handling, and logging.
 - **Reference living docs, don't duplicate them.** Say "follow the API client pattern in `src/api/reviews.ts`" not copy-paste the pattern.
 - **Types must match foundation-sdk backend responses.** Read the backend's `api/schemas.py` and blueprint serializer. If the backend returns `snake_case`, types use `snake_case`. Do not assume camelCase.

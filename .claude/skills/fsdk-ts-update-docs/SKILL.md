@@ -1,8 +1,8 @@
 ---
-description: Update all frontend-lib documentation to reflect code changes. Auto-discovers what changed via git diff, then updates ARCHITECTURE.md module tables, verifies type-backend parity with foundation-sdk, and checks cross-layer documentation in foundation-sdk DOMAIN.md files.
+description: Update all fsdk-ts documentation to reflect code changes. Auto-discovers what changed via git diff, then updates ARCHITECTURE.md module tables, verifies type-backend parity with foundation-sdk, and checks cross-layer documentation in foundation-sdk DOMAIN.md files.
 ---
 
-# /frontend-lib-update-docs — Update Frontend-lib Documentation
+# /fsdk-ts-update-docs — Update fsdk-ts Documentation
 
 ## User Input
 
@@ -14,7 +14,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ---
 
-Update frontend-lib documentation to match the current state of the code.
+Update fsdk-ts documentation to match the current state of the code.
 
 ## Step 1: Discover what changed
 
@@ -63,16 +63,16 @@ Use this decision tree:
 | New convention or pattern change | ARCHITECTURE.md: Conventions section |
 | Module extracted to consumer app | ARCHITECTURE.md: Migration section (if still relevant) |
 | **Foundation-sdk endpoint changed** | **Cross-layer:** verify `src/types/<domain>.ts` still matches `foundation-sdk/foundation/<domain>/api/schemas.py` |
-| **New foundation-sdk domain with endpoints** | **Cross-layer:** check if frontend-lib module exists; if not, flag for creation |
+| **New foundation-sdk domain with endpoints** | **Cross-layer:** check if fsdk-ts module exists; if not, flag for creation |
 
 **Only update docs affected by actual code changes.** Don't rewrite unrelated sections.
 
 ## Step 3: ARCHITECTURE.md structure
 
-frontend-lib has a single ARCHITECTURE.md (no per-module DOMAIN.md files — the project is a flat library, not a domain-based architecture). The doc has these sections:
+fsdk-ts has a single ARCHITECTURE.md (no per-module DOMAIN.md files — the project is a flat library, not a domain-based architecture). The doc has these sections:
 
 1. **What This Library Is** — one paragraph
-2. **What Goes in Frontend-lib vs. Consumer Apps** — the agnosticism rules
+2. **What Goes in fsdk-ts vs. Consumer Apps** — the agnosticism rules
 3. **Module Reference** — tables for each module category:
    - API Clients (`src/api/`)
    - React Hooks (`src/hooks/`)
@@ -91,14 +91,14 @@ When updating, match the existing table format exactly. Read the current file fi
 
 ### Foundation-sdk DOMAIN.md — 1 place per domain
 
-When a frontend-lib module is created or updated for a foundation-sdk domain:
+When a fsdk-ts module is created or updated for a foundation-sdk domain:
 
-1. **Check `../foundation-sdk/foundation/<domain>/DOMAIN.md`** for a "Cross-Domain Dependencies" or "Frontend-lib" reference
-2. If the DOMAIN.md doesn't mention the frontend-lib module → add a note: "Frontend-lib companion: `src/types/<domain>.ts`, `src/api/<domain>.ts`, `src/hooks/<domain>/use<Domain>.ts`"
+1. **Check `../foundation-sdk/foundation/<domain>/DOMAIN.md`** for a "Cross-Domain Dependencies" or "fsdk-ts" reference
+2. If the DOMAIN.md doesn't mention the fsdk-ts module → add a note: "fsdk-ts companion: `src/types/<domain>.ts`, `src/api/<domain>.ts`, `src/hooks/<domain>/use<Domain>.ts`"
 
-Verify which domains have frontend-lib modules:
+Verify which domains have fsdk-ts modules:
 ```bash
-# List all frontend-lib API modules
+# List all fsdk-ts API modules
 ls src/api/*.ts | grep -v index | grep -v client | grep -v foundation-client
 
 # List all foundation-sdk domains with HTTP endpoints
@@ -163,7 +163,7 @@ Cross-check:
 - Every type file in `src/types/` has a row in ARCHITECTURE.md Type Definitions table
 - Every barrel export line has a corresponding module that exists
 - Package.json exports map matches ARCHITECTURE.md Package Exports table
-- Foundation-sdk DOMAIN.md files reference their frontend-lib companions
+- Foundation-sdk DOMAIN.md files reference their fsdk-ts companions
 
 ## Rules
 
@@ -172,5 +172,5 @@ Cross-check:
 - **Match existing format.** Read ARCHITECTURE.md first. Don't introduce new table structures or heading styles.
 - **Build must pass.** If you updated code (types, exports), run `npm run build` to verify.
 - **Never remove docs for modules that still exist.** If unsure whether something was removed, check the file system first.
-- **Cross-layer awareness.** When frontend-lib modules change, check if foundation-sdk DOMAIN.md files need updating. When foundation-sdk endpoints change, check if frontend-lib types are still accurate.
+- **Cross-layer awareness.** When fsdk-ts modules change, check if foundation-sdk DOMAIN.md files need updating. When foundation-sdk endpoints change, check if fsdk-ts types are still accurate.
 - **Type-backend parity is non-negotiable.** Types must match what the backend actually returns. Read `api/schemas.py` and the blueprint serializer — don't guess field names.
