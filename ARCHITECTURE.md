@@ -225,6 +225,26 @@ foundation-sdk domains like MFA, billing, and tenancy are opt-in. When not confi
 
 The media blueprint returns 404 when no media exists for an entity, rather than 200 with an empty array. Frontend code calling `mediaApi.getGallery()` should catch 404 and treat it as an empty gallery.
 
+### User vs Profile: What's Editable
+
+The `User` model (`first_name`, `last_name`, `email`, `platform_role`) is set at registration and not editable by the user through the profile API. The `PUT /api/users/profile` endpoint only updates `profile_data` — a flexible JSON blob stored on `UserProfile` (e.g., bio, phone, preferences).
+
+**Consumer apps must treat User fields as read-only on the profile page.** Display `first_name`, `last_name`, and `email` as static text. Use `updateProfile()` from `useAccount` to save editable `profile_data` fields.
+
+The `updateUser()` function on `useUser` is a **local state setter only** — it writes to localStorage but does not call any API. It exists for internal use (e.g., `useAuth.login()` storing the user after login). Do not use it for profile editing — changes will appear to save but will be lost on page reload.
+
+**Correct pattern for profile pages:**
+```tsx
+const { user, profile, updateProfile } = useAccount()
+
+// Display user fields as read-only
+<p>{user?.first_name} {user?.last_name}</p>
+<p>{user?.email}</p>
+
+// Edit profile_data fields
+await updateProfile({ ...profile, bio, phone })
+```
+
 ## Migration Complete (2026-03-31)
 
 The following Rihla-specific modules were extracted to the Rihla consumer app (`rihla-web/frontend/chisfis-nextjs/src/lib/`). They now import agnostic utilities (logging, HTTP clients, `ApiError`) from fsdk-ts.
