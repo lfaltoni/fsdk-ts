@@ -90,7 +90,8 @@ export const useAuth = (): UseAuthReturn => {
           email: user.email,
           first_name: user.first_name,
           last_name: user.last_name,
-          registration_order: user.registration_order
+          registration_order: user.registration_order,
+          platform_role: user.platform_role,
         };
 
         setUser(updatedUser);
