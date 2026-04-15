@@ -48,6 +48,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "@types/nodemailer": "^7.0.10",
     "@types/react": "^19.2.7",
     "@types/node": "^20.9.2",
@@ -57,8 +58,13 @@
     "react": "^19.2.3"
   },
   "peerDependencies": {
+    "@tanstack/react-table": ">=8.0.0",
     "react": "^19.2.3",
     "nodemailer": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-table": { "optional": true },
+    "nodemailer": { "optional": true }
   },
   "files": [
     "dist",

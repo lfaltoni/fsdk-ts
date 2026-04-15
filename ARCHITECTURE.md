@@ -245,6 +245,95 @@ const { user, profile, updateProfile } = useAccount()
 await updateProfile({ ...profile, bio, phone })
 ```
 
+## Headless Data Table Infrastructure (`src/table/`)
+
+Server-side table hooks powered by [TanStack Table](https://tanstack.com/table) (peer dependency, optional).
+
+**Architecture:**
+
+```
+@tanstack/react-table (peer dep — headless engine)
+    ↑
+useServerTable<T> (generic hook — pagination, filters, sorting, expansion, loading/error)
+    ↑
+Domain wrappers (useAuditTable, future: useAdminUsersTable, etc.)
+    ↑
+Consumer app (renders columns using whatever UI library it wants)
+```
+
+**What fsdk-ts provides:**
+- `useServerTable<T>` — generic hook wrapping TanStack Table for server-side data
+- `useAuditTable()` — audit domain wrapper with default columns and `auditApi.query` fetch adapter
+- `auditColumns` — individual column definitions, cherry-pickable for custom layouts
+- `extractAuditChanges(entry)` — pure utility to parse `extra_data.changes` into `{field, before, after}[]`
+- Re-exports of key TanStack types: `ColumnDef`, `SortingState`, `flexRender`, `createColumnHelper`, etc.
+
+**What consumer apps provide:**
+- All rendering — table markup, cell components, filter UI, pagination controls, styling
+- Product-specific table hooks following the same pattern (e.g., `useJobListingsTable()`)
+- Choice of UI library (shadcn, raw HTML, anything)
+
+### useServerTable<T> API
+
+```typescript
+const { table, isLoading, error, clearError, total, refetch, filters, setFilter, clearFilters, hasActiveFilters } =
+  useServerTable<MyRow>({
+    fetchFn: async (params) => {
+      // params: { page (1-based), pageSize, sorting, filters }
+      const res = await myApi.list({ page: params.page, per_page: params.pageSize, ...params.filters });
+      return { data: res.items, total: res.total, pageCount: Math.ceil(res.total / params.pageSize) };
+    },
+    columns: myColumns,
+    initialPageSize: 25,
+    enableSorting: true,    // opt-in, default false
+    enableExpanding: true,  // opt-in, default false
+    getRowCanExpand: (row) => !!row.original.details,
+  });
+```
+
+### useAuditTable() API
+
+```typescript
+// Default — uses auditApi.query (foundationRequest)
+const { table, isLoading, setFilter } = useAuditTable();
+
+// Monolithic apps — pass own fetch function
+const { table } = useAuditTable({
+  fetchFn: (params) => myApiRequest(`/admin/audit/?page=${params.page}&per_page=${params.per_page}`),
+});
+
+// Custom columns
+const { table } = useAuditTable({
+  columns: [auditColumns.time, auditColumns.action, myCustomColumn],
+});
+```
+
+### Adding a new domain table wrapper
+
+Follow the `useAuditTable` pattern:
+
+1. Create `src/table/use<Domain>Table.ts`
+2. Define default columns via `createColumnHelper<MyEntity>()`
+3. Write a fetch adapter that maps `ServerTableFetchParams` to your domain's API
+4. Call `useServerTable<MyEntity>()` with the adapter and columns
+5. Export from `src/table/index.ts`
+
+### Design decisions
+
+- **Page numbers are 1-based** in `ServerTableFetchParams` — the hook converts from TanStack's 0-based `pageIndex` internally. Domain adapters receive natural page numbers.
+- **Filters are a plain `Record<string, unknown>`** — simpler than TanStack's `ColumnFiltersState` and matches how backend APIs accept filter params.
+- **`@tanstack/react-table` is an optional peer dep** — consumers that don't use table hooks don't need it installed.
+- **Stale request protection** via `useRef` counter — prevents race conditions when pagination/filters change rapidly.
+- **`fetchFn` is stored in a ref** — prevents infinite re-fetch loops when the function reference changes.
+
+| File | Purpose |
+|------|---------|
+| `src/table/types.ts` | Generic types + TanStack re-exports |
+| `src/table/useServerTable.ts` | Generic hook |
+| `src/table/useAuditTable.ts` | Audit domain wrapper + `auditColumns` |
+| `src/table/audit-utils.ts` | `extractAuditChanges()` pure utility |
+| `src/table/index.ts` | Barrel exports |
+
 ## Migration Complete (2026-03-31)
 
 The following Rihla-specific modules were extracted to the Rihla consumer app (`rihla-web/frontend/chisfis-nextjs/src/lib/`). They now import agnostic utilities (logging, HTTP clients, `ApiError`) from fsdk-ts.

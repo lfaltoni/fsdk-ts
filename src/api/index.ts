@@ -10,3 +10,5 @@ export * from './audit';
 export * from './invites';
 export * from './admin';
 export * from './favorites';
+export * from './messaging';
+export * from './phoneVerification';

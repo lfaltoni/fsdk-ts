@@ -10,6 +10,7 @@ export interface UserProfile {
 export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile>({});
   const [user, setUser] = useState<User | null>(null);
+  const [slug, setSlug] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,10 +27,11 @@ export const useProfile = () => {
       setIsLoading(true);
       setError(null);
 
-      const { user: fetchedUser, profile_data } = await profileApi.getProfile();
+      const { user: fetchedUser, profile_data, slug: fetchedSlug } = await profileApi.getProfile();
 
       setProfile(profile_data);
       setUser(fetchedUser);
+      setSlug(fetchedSlug);
       storage.setUser(fetchedUser);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load profile data';
@@ -69,6 +71,7 @@ export const useProfile = () => {
   return {
     profile,
     user,
+    slug,
     isLoading,
     error,
     updateProfile,
