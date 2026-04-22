@@ -19,7 +19,7 @@ Code that maps directly to a **foundation-sdk domain** or is **universally usefu
 - **Media** — generic entity-based upload/gallery (any entity type, any entity ID)
 - **Reviews** — polymorphic reviews (any `targetTable`/`targetId`)
 - **Billing** — Stripe subscription management (decoupled via `initBillingApi()`)
-- **Content** — pipeline rule management (CRUD, toggle, test, stats, sources) for content ingestion filtering
+- **Content** — pipeline rule management (CRUD, toggle, test, stats, sources, senders) for content ingestion filtering
 - **HTTP clients** — `apiRequest` (CSRF-aware), `foundationRequest`, `ApiError`
 - **Utilities** — structured logging, localStorage helpers, env config, pagination, SEO JSON-LD generators
 - **Server utilities** — rate limiting, IP extraction
