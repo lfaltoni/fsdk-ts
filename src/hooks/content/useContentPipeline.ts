@@ -3,6 +3,7 @@ import { contentPipelineApi } from '../../api/content';
 import type {
   ContentPipelineRule,
   ContentStats,
+  KnownSender,
   CreatePipelineRuleRequest,
   UpdatePipelineRuleRequest,
   TestPipelineRuleParams,
@@ -18,6 +19,7 @@ export interface UseContentPipelineReturn {
   selectedRule: ContentPipelineRule | null;
   stats: ContentStats | null;
   sources: string[];
+  senders: KnownSender[];
   testResult: TestPipelineRuleResponse | null;
   isLoading: boolean;
   isSubmitting: boolean;
@@ -33,6 +35,7 @@ export interface UseContentPipelineReturn {
   testRules: (params: TestPipelineRuleParams) => Promise<void>;
   getStats: () => Promise<void>;
   getSources: () => Promise<void>;
+  getSenders: (source?: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -45,6 +48,7 @@ export const useContentPipeline = (): UseContentPipelineReturn => {
   const [selectedRule, setSelectedRule] = useState<ContentPipelineRule | null>(null);
   const [stats, setStats] = useState<ContentStats | null>(null);
   const [sources, setSources] = useState<string[]>([]);
+  const [senders, setSenders] = useState<KnownSender[]>([]);
   const [testResult, setTestResult] = useState<TestPipelineRuleResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -224,11 +228,30 @@ export const useContentPipeline = (): UseContentPipelineReturn => {
     }
   }, []);
 
+  const getSenders = useCallback(async (source?: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await contentPipelineApi.getSenders(source);
+      setSenders(res.data);
+      logger.info('Senders loaded', { count: res.data.length });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch senders';
+      setError(msg);
+      logger.error('Senders fetch failed', { error: msg });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     rules,
     selectedRule,
     stats,
     sources,
+    senders,
     testResult,
     isLoading,
     isSubmitting,
@@ -242,6 +265,7 @@ export const useContentPipeline = (): UseContentPipelineReturn => {
     testRules,
     getStats,
     getSources,
+    getSenders,
     clearError,
   };
 };

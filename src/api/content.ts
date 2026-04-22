@@ -10,6 +10,7 @@ import type {
   TestPipelineRuleResponse,
   ContentStatsResponse,
   ContentSourcesResponse,
+  ContentSendersResponse,
   ContentMessageResponse,
 } from '../types/content';
 import { getLogger } from '../utils/logging';
@@ -201,6 +202,27 @@ export const contentPipelineApi = {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Failed to fetch content sources', { error: errorMessage });
+      throw error;
+    }
+  },
+
+  /**
+   * List known senders from ingested content metadata. Admin only.
+   * Optional source filter (e.g. 'whatsapp').
+   */
+  getSenders: async (source?: string): Promise<ContentSendersResponse> => {
+    logger.info('Fetching known senders', { source });
+
+    try {
+      const url = source
+        ? `/api/content/senders?source=${encodeURIComponent(source)}`
+        : '/api/content/senders';
+      const response = await foundationRequest<ContentSendersResponse>(url);
+      logger.info('Known senders fetched', { count: response.data.length });
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to fetch known senders', { error: errorMessage });
       throw error;
     }
   },

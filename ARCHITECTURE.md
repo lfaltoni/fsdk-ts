@@ -78,7 +78,7 @@ Domain API modules:
 | `auditApi` | `audit.ts` | `foundationRequest` | `/api/admin/audit/*` (query, actor timeline, entity history) |
 | `invitesApi` | `invites.ts` | `foundationRequest` | `/api/admin/invites/*` + `/api/invites/*` (CRUD, validate, consume) |
 | `adminApi` | `admin.ts` | `foundationRequest` | `/api/admin/users/*` (list, detail, status, resend MFA) |
-| `contentPipelineApi` | `content.ts` | `foundationRequest` | `/api/content/*` (pipeline rules CRUD, toggle, test, stats, sources) |
+| `contentPipelineApi` | `content.ts` | `foundationRequest` | `/api/content/*` (pipeline rules CRUD, toggle, test, stats, sources, senders) |
 
 `billingApi` is special — it uses `initBillingApi(requestFn, urlPrefix)` so the consumer can configure which HTTP client and URL prefix to use. This is the pattern to follow for any module that might talk to different backends in different products.
 
@@ -101,7 +101,7 @@ Domain API modules:
 | `useAudit()` | `audit/useAudit.ts` | Audit log queries: `query()`, `getActorTimeline()`, `getEntityHistory()`. Manual trigger. |
 | `useInvites()` | `invites/useInvites.ts` | Platform invite management: `create()`, `listAll()`, `listPending()`, `revoke()`, `validate()`, `consume()`. Manual trigger. |
 | `useAdmin()` | `admin/useAdmin.ts` | Admin user management: `listUsers()`, `getUserDetail()`, `setAccountStatus()`, `resendMfa()`. Manual trigger. |
-| `useContentPipeline()` | `content/useContentPipeline.ts` | Content pipeline rule management: `listRules()`, `createRule()`, `updateRule()`, `deleteRule()`, `toggleRule()`, `testRules()`, `getStats()`, `getSources()`. Manual trigger. |
+| `useContentPipeline()` | `content/useContentPipeline.ts` | Content pipeline rule management: `listRules()`, `createRule()`, `updateRule()`, `deleteRule()`, `toggleRule()`, `testRules()`, `getStats()`, `getSources()`, `getSenders()`. Manual trigger. |
 
 ### Type Definitions (`src/types/`)
 
@@ -117,7 +117,7 @@ Domain API modules:
 | `audit.ts` | `AuditEntry`, `AuditPageResponse`, `AuditQueryParams`, `AuditPaginationMeta` | foundation-sdk `audit` domain |
 | `invite.ts` | `PlatformInvite`, `InviteListResponse`, `InviteValidateResponse`, `InviteCreateRequest` | foundation-sdk `invites` domain |
 | `admin.ts` | `AdminUser`, `AdminUserDetail`, `AdminUserListResponse`, `AdminUserListParams` | foundation-sdk `admin` domain |
-| `content.ts` | `ContentPipelineRule`, `CreatePipelineRuleRequest`, `UpdatePipelineRuleRequest`, `TestPipelineRuleParams`, `TestPipelineRuleResponse`, `ContentStats` | foundation-sdk `content` domain |
+| `content.ts` | `PipelineRuleType`, `FrequencyCapScope`, `ContentPipelineRule`, `CreatePipelineRuleRequest`, `UpdatePipelineRuleRequest`, `TestPipelineRuleParams`, `TestPipelineRuleResponse`, `ContentStats`, `KnownSender`, `ContentSendersResponse` | foundation-sdk `content` domain |
 
 ### Utilities (`src/utils/`)
 

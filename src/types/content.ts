@@ -1,8 +1,9 @@
 // Content pipeline types — matches foundation-sdk content admin API response shapes
 
-export type PipelineRuleType = 'dedup_strategy' | 'keyword_block' | 'frequency_cap' | 'sender_block';
+export type PipelineRuleType = 'dedup_strategy' | 'keyword_block' | 'frequency_cap' | 'sender_block' | 'sender_allow';
 export type DedupMethod = 'source_content_id' | 'content_hash' | 'both';
 export type RuleAction = 'skip' | 'flag';
+export type FrequencyCapScope = 'global' | 'channel' | 'sender' | 'sender_channel';
 
 export interface ContentPipelineRule {
   rule_id: string;
@@ -73,6 +74,16 @@ export interface ContentStatsResponse {
 export interface ContentSourcesResponse {
   success: boolean;
   data: string[];
+}
+
+export interface KnownSender {
+  sender_id: string;
+  sender_name: string;
+}
+
+export interface ContentSendersResponse {
+  success: boolean;
+  data: KnownSender[];
 }
 
 export interface ContentMessageResponse {
