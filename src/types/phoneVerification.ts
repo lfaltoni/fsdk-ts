@@ -8,7 +8,11 @@ export interface SendCodeResponse {
   success: boolean;
   verification_id: string;
   message: string;
-  code?: string; // Only present in dev mode (no sms_sender configured)
+  // NO `code` field. foundation-sdk used to return the OTP whenever no
+  // sms_sender was configured — a "dev mode" gated on service presence, which
+  // meant any app registering the blueprint without Twilio shipped a public
+  // endpoint handing out codes for any phone number. That branch is removed;
+  // local development wires an explicit sms_sender that logs the code instead.
 }
 
 export interface VerifyCodeRequest {

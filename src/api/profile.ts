@@ -1,6 +1,6 @@
 import type { User, PublicProfile } from '../types/auth';
 import { getLogger } from '../utils/logging';
-import { foundationRequest } from './foundation-client';
+import { FoundationApiError, foundationRequest } from './foundation-client';
 
 const logger = getLogger('profile-api');
 
@@ -36,6 +36,23 @@ export const profileApi = {
     }
   },
 
+  /**
+   * Update the authenticated user's profile_data.
+   *
+   * The backend enforces the consumer-declared `PROFILE_DATA_ALLOWED_KEYS` plus
+   * a reserved-name denylist and size bounds. A field it will not store is
+   * **refused with 422**, not silently dropped, and the offending names come
+   * back at `errors.rejected_keys` — read them off `FoundationApiError`:
+   *
+   * ```ts
+   * try { await profileApi.updateProfile(data) }
+   * catch (e) {
+   *   if (e instanceof FoundationApiError && e.status === 422) {
+   *     showFieldErrors(e.rejectedKeys)
+   *   }
+   * }
+   * ```
+   */
   updateProfile: async (profileData: Record<string, any>): Promise<{ success: boolean; message: string }> => {
     logger.info('Attempting to update profile');
 
@@ -49,7 +66,9 @@ export const profileApi = {
       return response;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Profile update failed', { error: errorMessage });
+      const rejectedKeys =
+        error instanceof FoundationApiError ? error.rejectedKeys : [];
+      logger.error('Profile update failed', { error: errorMessage, rejectedKeys });
       throw error;
     }
   },

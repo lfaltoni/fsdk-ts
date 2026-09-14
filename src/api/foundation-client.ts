@@ -6,6 +6,37 @@ import { surfaceToast } from './response-toast';
 
 const logger = getLogger('foundation-client');
 
+
+/**
+ * An HTTP error from a foundation-sdk endpoint, carrying the structured body.
+ *
+ * It is still an `Error` with the same `.message`, so existing `catch` blocks
+ * are unaffected. What it adds is the part the backend now sends and a plain
+ * `Error` threw away: `errors.rejected_keys` on a 422 from
+ * `PUT /api/users/profile`. The SDK refuses undeclared/reserved profile keys
+ * instead of silently dropping them — a client that cannot read WHICH keys were
+ * refused just reintroduces the silent drop at the frontend.
+ */
+export class FoundationApiError extends Error {
+  readonly status: number;
+  readonly body: Record<string, any>;
+
+  constructor(message: string, status: number, body: Record<string, any>) {
+    super(message);
+    this.name = 'FoundationApiError';
+    this.status = status;
+    this.body = body ?? {};
+  }
+
+  /** Field names the server refused (422 from the profile endpoint). */
+  get rejectedKeys(): string[] {
+    const errors = this.body?.errors;
+    const keys = errors && (errors as Record<string, unknown>).rejected_keys;
+    return Array.isArray(keys) ? (keys as string[]) : [];
+  }
+}
+
+
 /**
  * Make a request to the Foundation SDK server (auth, profiles, media).
  *
@@ -62,7 +93,11 @@ export async function foundationRequest<T>(
       }
 
       surfaceToast(data);
-      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+      throw new FoundationApiError(
+        data.message || data.error || `HTTP error! status: ${response.status}`,
+        response.status,
+        data,
+      );
     }
 
     surfaceToast(data);
