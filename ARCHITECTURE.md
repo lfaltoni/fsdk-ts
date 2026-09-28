@@ -157,7 +157,7 @@ The initial client snapshot is seeded synchronously from `localStorage` (`authRe
 |------|-------------|---------|
 | `logging.ts` | `getLogger(context)`, `FrontendLogger` | Structured logging with levels, localStorage export, `window.getFrontendLogs()` |
 | `storage.ts` | `storage` object | User + JWT token persistence in localStorage |
-| `env.ts` | `initEnv(cfg)`, `getEnvConfig()`, `EnvConfig` | Holds the consumer-injected config (`apiUrl`, `foundationUrl`, `loginPath`). `initEnv()` is called once at app entry; readers call `getEnvConfig()` live. fsdk-ts reads no env vars and holds no product defaults |
+| `env.ts` | `initEnv(cfg)`, `getEnvConfig()`, `EnvConfig` | Holds the consumer-injected config (`apiUrl`, `foundationUrl`, `loginPath`, optional `googleClientId`, `apiCredentials`, `apiCsrf`, `foundationCredentials`). `initEnv()` is called once at app entry; readers call `getEnvConfig()` live. fsdk-ts reads no env vars and holds no product defaults |
 | `pagination.ts` | `computePaginationPages()`, `computeTotalPages()` | Pagination UI logic (page numbers with gaps) |
 | `seo.ts` | `generateOrganizationJsonLd()`, `generateBreadcrumbJsonLd()`, `generateArticleJsonLd()`, `generateFAQJsonLd()` | Schema.org JSON-LD generators (no framework dependency) |
 | `validation.ts` | `validateEmail()`, `normalizeEmail()`, `validatePhone()`, `normalizePhone()` | Email and phone validation/normalization — mirrors foundation-sdk backend logic |
@@ -267,6 +267,16 @@ initEnv({
 | `loginPath` | Route the app is sent to after a forced (401) logout — used by `useRequireAuth`'s default redirect. Set if login is mounted at a non-default path |
 
 `initEnv(cfg)` accepts a `Partial<EnvConfig>` and merges over the current config. Any field not injected by the consumer falls back to the library's empty/neutral baseline (`apiUrl`/`foundationUrl` default to `''`; `loginPath` defaults to `/login`).
+
+**Credentials and CSRF (optional, API-FIRST WP7).** Three more fields tune what the HTTP clients send; unset, each keeps the historical behaviour, so a consumer that does not set them is unaffected:
+
+| Field | Default | Effect |
+|---|---|---|
+| `apiCredentials` | `'include'` | the `credentials` mode `apiRequest` sends (a per-call `credentials` option still wins). `'omit'` for an API authenticated by a Bearer token only: the browser attaches no ambient cookie. |
+| `apiCsrf` | `true` | `false` skips the `/api/v1/csrf-token` fetch and the `X-CSRFToken` header on mutating calls (a `debug` log line says so). For an API whose mutating routes use no CSRF. |
+| `foundationCredentials` | `'include'` | the `credentials` mode `foundationRequest` sends (a per-call option still wins). |
+
+`FoundationApiError.code` (additive) is the body's `error` when it is a string, else `null`.
 
 ## Consumer Integration Notes
 

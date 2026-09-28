@@ -28,6 +28,13 @@ export class FoundationApiError extends Error {
     this.body = body ?? {};
   }
 
+  /** The machine-readable error code (`body.error`) when the server sent one as a
+   *  string, else null. Additive: Bookease's error envelope puts its code there. */
+  get code(): string | null {
+    const error = this.body?.error;
+    return typeof error === 'string' ? error : null;
+  }
+
   /** Field names the server refused (422 from the profile endpoint). */
   get rejectedKeys(): string[] {
     const errors = this.body?.errors;
@@ -57,7 +64,7 @@ export async function foundationRequest<T>(
   try {
     const token = storage.getToken();
     const response = await fetch(url, {
-      credentials: 'include',
+      credentials: getEnvConfig().foundationCredentials ?? 'include',
       ...options,
       method,
       headers: {

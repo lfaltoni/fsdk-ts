@@ -13,6 +13,16 @@ export interface EnvConfig {
   // Google OAuth client id. Set to enable "Continue with Google" (useGoogleSignIn);
   // unset ⇒ the hook reports { available: false } and the consumer hides the button.
   googleClientId?: string;
+  // Credentials mode `apiRequest` sends by default. Unset ⇒ 'include' (a cookie
+  // session). An API authenticated by a Bearer token only can set 'omit', so the
+  // browser attaches no ambient cookie. A per-call `credentials` option still wins.
+  apiCredentials?: RequestCredentials;
+  // Whether `apiRequest` fetches a CSRF token (`/api/v1/csrf-token`) before a
+  // mutating call that sends credentials. Unset ⇒ true (today's behaviour). Set
+  // false for an API whose mutating routes do not use CSRF (Bearer only).
+  apiCsrf?: boolean;
+  // Credentials mode `foundationRequest` sends by default. Unset ⇒ 'include'.
+  foundationCredentials?: RequestCredentials;
 }
 
 let _cfg: EnvConfig = { apiUrl: '', foundationUrl: '', loginPath: '/login' };
