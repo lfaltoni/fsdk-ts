@@ -8,6 +8,25 @@ const logger = getLogger('useGoogleSignIn');
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
 
+// A BCP 47-shaped language tag ('en', 'en-GB', 'zh-Hant-TW'). Anything else is
+// dropped rather than put into the URL.
+const LOCALE_TAG = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+
+/**
+ * The GIS script URL, with `?hl=<locale>` when a valid language tag is given.
+ * Google renders the sign-in button in that language. No locale (or an invalid
+ * one) gives the plain URL, so Google falls back to the browser language.
+ */
+export function gisScriptSrc(locale?: string): string {
+  const tag = (locale ?? '').trim();
+  if (!tag) return GIS_SRC;
+  if (!LOCALE_TAG.test(tag)) {
+    logger.info('Ignoring invalid googleLocale for the GIS script', { locale: tag });
+    return GIS_SRC;
+  }
+  return `${GIS_SRC}?hl=${encodeURIComponent(tag)}`;
+}
+
 // Module-level singleton so the GIS <script> is injected at most once across all
 // hook instances (mirrors the visibility-listener install guard in useAuth).
 let gisScriptPromise: Promise<void> | null = null;
@@ -20,14 +39,16 @@ function loadGisScript(): Promise<void> {
   if (gisScriptPromise) return gisScriptPromise;
 
   gisScriptPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${GIS_SRC}"]`);
+    // Match any GIS script already on the page, with or without `hl`, so the
+    // script is never injected twice (the first one's language wins).
+    const existing = document.querySelector<HTMLScriptElement>(`script[src^="${GIS_SRC}"]`);
     if (existing) {
       existing.addEventListener('load', () => resolve());
       existing.addEventListener('error', () => reject(new Error('Failed to load Google Identity Services')));
       return;
     }
     const script = document.createElement('script');
-    script.src = GIS_SRC;
+    script.src = gisScriptSrc(getEnvConfig().googleLocale);
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();

@@ -13,6 +13,13 @@ export interface EnvConfig {
   // Google OAuth client id. Set to enable "Continue with Google" (useGoogleSignIn);
   // unset ⇒ the hook reports { available: false } and the consumer hides the button.
   googleClientId?: string;
+  // Language for the Google sign-in button (a BCP 47 tag such as 'en' or 'en-GB').
+  // Google Identity Services picks the button language from the `hl` parameter
+  // of its script URL (renderButton's `locale` option is ignored), so this is
+  // appended to the GIS script as `?hl=<tag>`. Unset ⇒ no `hl`, and Google
+  // chooses from the browser language (the previous behaviour). Read once, when
+  // the GIS script is first injected: set it before the first useGoogleSignIn.
+  googleLocale?: string;
   // Credentials mode `apiRequest` sends by default. Unset ⇒ 'include' (a cookie
   // session). An API authenticated by a Bearer token only can set 'omit', so the
   // browser attaches no ambient cookie. A per-call `credentials` option still wins.

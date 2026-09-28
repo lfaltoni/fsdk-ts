@@ -157,7 +157,7 @@ The initial client snapshot is seeded synchronously from `localStorage` (`authRe
 |------|-------------|---------|
 | `logging.ts` | `getLogger(context)`, `FrontendLogger` | Structured logging with levels, localStorage export, `window.getFrontendLogs()` |
 | `storage.ts` | `storage` object | User + JWT token persistence in localStorage |
-| `env.ts` | `initEnv(cfg)`, `getEnvConfig()`, `EnvConfig` | Holds the consumer-injected config (`apiUrl`, `foundationUrl`, `loginPath`, optional `googleClientId`, `apiCredentials`, `apiCsrf`, `foundationCredentials`). `initEnv()` is called once at app entry; readers call `getEnvConfig()` live. fsdk-ts reads no env vars and holds no product defaults |
+| `env.ts` | `initEnv(cfg)`, `getEnvConfig()`, `EnvConfig` | Holds the consumer-injected config (`apiUrl`, `foundationUrl`, `loginPath`, optional `googleClientId`, `googleLocale` (appended to the GIS script as `?hl=` so the Google button follows the site language), `apiCredentials`, `apiCsrf`, `foundationCredentials`). `initEnv()` is called once at app entry; readers call `getEnvConfig()` live. fsdk-ts reads no env vars and holds no product defaults |
 | `pagination.ts` | `computePaginationPages()`, `computeTotalPages()` | Pagination UI logic (page numbers with gaps) |
 | `seo.ts` | `generateOrganizationJsonLd()`, `generateBreadcrumbJsonLd()`, `generateArticleJsonLd()`, `generateFAQJsonLd()` | Schema.org JSON-LD generators (no framework dependency) |
 | `validation.ts` | `validateEmail()`, `normalizeEmail()`, `validatePhone()`, `normalizePhone()` | Email and phone validation/normalization — mirrors foundation-sdk backend logic |
