@@ -23,7 +23,7 @@ export const useProfilePicture = (userId: string) => {
       setError(null);
 
       const response = await fetch(`${getEnvConfig().foundationUrl}/media/profile-picture/${userId}`, {
-        credentials: 'include'
+        credentials: getEnvConfig().foundationCredentials ?? 'include'
       });
 
       if (response.ok) {
@@ -77,7 +77,7 @@ export const useProfilePicture = (userId: string) => {
       const response = await fetch(`${getEnvConfig().foundationUrl}/media/upload/profile-picture`, {
         method: 'POST',
         body: formData,
-        credentials: 'include'
+        credentials: getEnvConfig().foundationCredentials ?? 'include'
       });
 
       console.log('Upload URL:', `${getEnvConfig().foundationUrl}/media/upload/profile-picture`);

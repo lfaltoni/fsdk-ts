@@ -15,7 +15,9 @@ async function mediaRequest<T>(
 
   try {
     const response = await fetch(url, {
-      credentials: 'include',
+      // WP7: the foundation surface's credentials mode (default 'include'); a
+      // per-call `credentials` in options still wins.
+      credentials: getEnvConfig().foundationCredentials ?? 'include',
       ...options,
     });
 

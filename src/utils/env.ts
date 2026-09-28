@@ -21,7 +21,8 @@ export interface EnvConfig {
   // mutating call that sends credentials. Unset ⇒ true (today's behaviour). Set
   // false for an API whose mutating routes do not use CSRF (Bearer only).
   apiCsrf?: boolean;
-  // Credentials mode `foundationRequest` sends by default. Unset ⇒ 'include'.
+  // Credentials mode for the foundation surface (foundationRequest, mediaApi,
+  // useProfilePicture). Unset ⇒ 'include'.
   foundationCredentials?: RequestCredentials;
 }
 

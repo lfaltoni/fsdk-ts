@@ -274,7 +274,7 @@ initEnv({
 |---|---|---|
 | `apiCredentials` | `'include'` | the `credentials` mode `apiRequest` sends (a per-call `credentials` option still wins). `'omit'` for an API authenticated by a Bearer token only: the browser attaches no ambient cookie. |
 | `apiCsrf` | `true` | `false` skips the `/api/v1/csrf-token` fetch and the `X-CSRFToken` header on mutating calls (a `debug` log line says so). For an API whose mutating routes use no CSRF. |
-| `foundationCredentials` | `'include'` | the `credentials` mode `foundationRequest` sends (a per-call option still wins). |
+| `foundationCredentials` | `'include'` | the `credentials` mode sent to the foundation surface: `foundationRequest`, `mediaApi` and `useProfilePicture` (a per-call option still wins where the call takes one). |
 
 `FoundationApiError.code` (additive) is the body's `error` when it is a string, else `null`.
 
