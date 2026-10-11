@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // API-FIRST WP7: a consumer can turn off ambient credentials and the CSRF round-trip
-// (apiCredentials / apiCsrf / foundationCredentials on initEnv). Defaults are today's
-// behaviour, so BlogMachine and every other consumer that does not opt in is unchanged.
+// (apiCredentials / apiCsrf / foundationCredentials on initEnv). The CSRF fetch is opt-in
+// (apiCsrf: true); credentials default to 'include'.
 
 vi.mock('../api/response-toast', () => ({ surfaceToast: vi.fn() }));
 
@@ -31,17 +31,26 @@ describe('apiRequest credentials + CSRF', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('default: a mutating call fetches a CSRF token and sends credentials (unchanged)', async () => {
+  it('default: a mutating call sends credentials but fetches no CSRF token', async () => {
     const { client } = await freshModules();
+    fetchMock.mockResolvedValueOnce(okJson({ ok: 1 }));
+    await client.apiRequest('/api/v1/x', { method: 'POST', body: '{}' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.test/api/v1/x');
+    expect(init.credentials).toBe('include');
+    expect(init.headers['X-CSRFToken']).toBeUndefined();
+  });
+
+  it('apiCsrf true (opt-in): a mutating call fetches a CSRF token first and sends it', async () => {
+    const { env, client } = await freshModules();
+    env.initEnv({ apiCsrf: true });
     fetchMock.mockResolvedValueOnce(okJson({ csrfToken: 'tok' }));
     fetchMock.mockResolvedValueOnce(okJson({ ok: 1 }));
     await client.apiRequest('/api/v1/x', { method: 'POST', body: '{}' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toBe('https://api.test/api/v1/csrf-token');
-    expect(fetchMock.mock.calls[0][1].credentials).toBe('include');
-    const [, init] = fetchMock.mock.calls[1];
-    expect(init.credentials).toBe('include');
-    expect(init.headers['X-CSRFToken']).toBe('tok');
+    expect(fetchMock.mock.calls[1][1].headers['X-CSRFToken']).toBe('tok');
   });
 
   it("apiCredentials 'omit' + apiCsrf false: one fetch, no cookie, no CSRF header", async () => {

@@ -25,8 +25,9 @@ export interface EnvConfig {
   // browser attaches no ambient cookie. A per-call `credentials` option still wins.
   apiCredentials?: RequestCredentials;
   // Whether `apiRequest` fetches a CSRF token (`/api/v1/csrf-token`) before a
-  // mutating call that sends credentials. Unset ⇒ true (today's behaviour). Set
-  // false for an API whose mutating routes do not use CSRF (Bearer only).
+  // mutating call that sends credentials. Unset ⇒ false (a Bearer-token API needs
+  // no CSRF round-trip, and Bookease no longer serves that route). Set true for a
+  // cookie-session API that protects its mutating routes with Flask-WTF CSRF.
   apiCsrf?: boolean;
   // Credentials mode for the foundation surface (foundationRequest, mediaApi,
   // useProfilePicture). Unset ⇒ 'include'.
