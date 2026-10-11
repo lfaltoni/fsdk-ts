@@ -118,11 +118,8 @@ export async function apiRequest<T>(
   const method = (options.method || 'GET').toUpperCase();
   const env = getEnvConfig();
   const credentials = options.credentials ?? env.apiCredentials ?? 'include';
-  const csrfEnabled = env.apiCsrf !== false;
+  const csrfEnabled = env.apiCsrf === true;
   const needsCsrf = csrfEnabled && MUTATING_METHODS.has(method);
-  if (!csrfEnabled && MUTATING_METHODS.has(method)) {
-    logger.debug('CSRF skipped (apiCsrf: false)', { method });
-  }
 
   const token = storage.getToken();
   const headers: Record<string, string> = {
@@ -132,7 +129,7 @@ export async function apiRequest<T>(
   };
 
   // Attach CSRF token for mutating requests that send credentials (unless the
-  // consumer turned CSRF off with initEnv({ apiCsrf: false })).
+  // consumer did not opt in with initEnv({ apiCsrf: true })).
   if (needsCsrf && credentials === 'include') {
     headers['X-CSRFToken'] = await getCsrfToken();
   }

@@ -273,7 +273,7 @@ initEnv({
 | Field | Default | Effect |
 |---|---|---|
 | `apiCredentials` | `'include'` | the `credentials` mode `apiRequest` sends (a per-call `credentials` option still wins). `'omit'` for an API authenticated by a Bearer token only: the browser attaches no ambient cookie. |
-| `apiCsrf` | `true` | `false` skips the `/api/v1/csrf-token` fetch and the `X-CSRFToken` header on mutating calls (a `debug` log line says so). For an API whose mutating routes use no CSRF. |
+| `apiCsrf` | `false` | `true` fetches `/api/v1/csrf-token` and sends `X-CSRFToken` on mutating calls that send credentials. Opt in only for a cookie-session API that serves that route (Flask-WTF); Bookease removed it, and Bearer-token APIs need no CSRF round-trip. |
 | `foundationCredentials` | `'include'` | the `credentials` mode sent to the foundation surface: `foundationRequest`, `mediaApi` and `useProfilePicture` (a per-call option still wins where the call takes one). |
 
 `FoundationApiError.code` (additive) is the body's `error` when it is a string, else `null`.
