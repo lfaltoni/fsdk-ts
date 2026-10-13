@@ -63,6 +63,26 @@ export function usePasswordChangeRequired(): UsePasswordChangeRequiredReturn {
         authStore.setUser({ ...user, password_change_required: false });
       }
       logger.info('Password changed; forced-change requirement cleared');
+
+      // Unlike every sibling auth method (login/register/google/magic-link/
+      // passwordless), the backend's change-password route never returns a
+      // token — it responds with the plain `{ success, message }` envelope
+      // (`MessageResponseSchema`), not `LoginResponseSchema`, and there is no
+      // dedicated refresh endpoint. So this call must re-authenticate with the
+      // new password to mint + store a fresh token the same way `authApi.login`
+      // already does for its callers, instead of leaving `storage`'s token
+      // untouched. Best-effort: the password change itself already succeeded
+      // and its requirement flags are already cleared above, so a re-login
+      // hiccup (e.g. a network blip) must not fail this call — only log it.
+      if (user?.email) {
+        try {
+          const refreshedUser = await authApi.login({ email: user.email, password: newPassword });
+          authStore.setUser(refreshedUser);
+        } catch (error) {
+          logger.error('Post-change-password re-login failed; keeping existing token', { error });
+        }
+      }
+
       return result;
     },
     [user]
