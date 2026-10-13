@@ -10,3 +10,4 @@ export * from './useMagicLink';
 export * from './useConsumeMagicLink';
 export * from './useEmailSignIn';
 export * from './useConsumePasswordless';
+export * from './usePasswordChangeRequired';

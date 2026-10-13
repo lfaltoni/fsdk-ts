@@ -3,6 +3,7 @@ import { getEnvConfig } from '../utils/env';
 import { storage } from '../utils/storage';
 import { authStore } from './auth-store';
 import { surfaceToast } from './response-toast';
+import { PASSWORD_CHANGE_REQUIRED } from '../types/auth';
 
 const logger = getLogger('foundation-client');
 
@@ -97,6 +98,14 @@ export async function foundationRequest<T>(
         // session (user + JWT) AND notifies every subscribed useAuth instance so
         // the whole app de-auths consistently.
         authStore.deauth();
+      } else if (response.status === 403 && data?.error === PASSWORD_CHANGE_REQUIRED) {
+        // The user IS authenticated — forbidden only until they rotate their
+        // password. Deliberately NOT a deauth: unlike the 401 branch above,
+        // this must leave the session intact so the SPA can route to the
+        // change-password flow instead of bouncing to login.
+        authStore.notifyPasswordChangeRequired(
+          typeof data.change_password_url === 'string' ? data.change_password_url : null
+        );
       }
 
       surfaceToast(data);

@@ -90,6 +90,26 @@ export const authApi = {
     return response;
   },
 
+  changePassword: async (
+    oldPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message: string }> => {
+    // Requires the current password (login_required + old_password
+    // verification server-side) — distinct from confirmPasswordReset, which
+    // is the forgot-password token flow. This is the endpoint
+    // `DEFAULT_EXEMPT_ENDPOINTS` keeps reachable while a user is gated by
+    // `password_change_required` (see usePasswordChangeRequired).
+    logger.info('Changing password');
+
+    const response = await foundationRequest<{ success: boolean; message: string }>('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    });
+
+    logger.info('Password changed');
+    return response;
+  },
+
   confirmPasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
     logger.info('Confirming password reset');
 
