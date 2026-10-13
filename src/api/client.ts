@@ -3,6 +3,7 @@ import { getEnvConfig } from '../utils/env';
 import { storage } from '../utils/storage';
 import { authStore } from './auth-store';
 import { surfaceToast } from './response-toast';
+import { PASSWORD_CHANGE_REQUIRED } from '../types/auth';
 
 const logger = getLogger('api-client');
 
@@ -107,6 +108,19 @@ function maybeDeauth(status: number, endpoint: string): void {
   }
 }
 
+/**
+ * The user IS authenticated — forbidden only until they rotate their
+ * password. Deliberately NOT a deauth (see maybeDeauth): the session stays
+ * intact so the SPA can route to the change-password flow instead of
+ * bouncing to login.
+ */
+function maybeNotifyPasswordChangeRequired(status: number, data: Record<string, unknown>): void {
+  if (status === 403 && data.error === PASSWORD_CHANGE_REQUIRED) {
+    const url = data.change_password_url;
+    authStore.notifyPasswordChangeRequired(typeof url === 'string' ? url : null);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Core API request
 // ---------------------------------------------------------------------------
@@ -168,6 +182,7 @@ export async function apiRequest<T>(
 
         if (!retryResponse.ok) {
           maybeDeauth(retryResponse.status, endpoint);
+          maybeNotifyPasswordChangeRequired(retryResponse.status, retryData);
           surfaceToast(retryData);
           const msg = retryData.message || retryData.error || `HTTP error! status: ${retryResponse.status}`;
           throw new ApiError(msg, retryResponse.status, retryData);
@@ -177,6 +192,7 @@ export async function apiRequest<T>(
       }
 
       maybeDeauth(response.status, endpoint);
+      maybeNotifyPasswordChangeRequired(response.status, data);
 
       // 422: Flask-Smorest validation errors have { errors: { json: { field: [...] } } }
       const message = response.status === 422 && data.errors

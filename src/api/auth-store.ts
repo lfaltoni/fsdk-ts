@@ -1,5 +1,6 @@
 import { storage } from '../utils/storage';
 import { getLogger } from '../utils/logging';
+import { PASSWORD_CHANGE_REQUIRED } from '../types/auth';
 import type { User } from '../types/auth';
 
 const logger = getLogger('auth-store');
@@ -29,6 +30,18 @@ export interface AuthSnapshot {
    * by guards to mean "definitively unauthenticated".
    */
   authResolved: boolean;
+  /**
+   * True once either HTTP client has seen a 403 `password_change_required`
+   * response for the current session. Set by `notifyPasswordChangeRequired`,
+   * NEVER by a 401 path — the user stays authenticated throughout (see
+   * foundation-client.ts / client.ts, which deliberately do not deauth on
+   * this code). Cleared by `clearPasswordChangeRequired` (a successful
+   * change-password call) and by `deauth` (a fresh session starts clean).
+   */
+  passwordChangeRequired: boolean;
+  /** The URL to redirect to for the change-password flow, if the backend
+   *  resolved one. Null when the backend had no per-user URL to offer. */
+  changePasswordUrl: string | null;
 }
 
 type Listener = () => void;
@@ -38,6 +51,8 @@ type Listener = () => void;
 const SERVER_SNAPSHOT: AuthSnapshot = Object.freeze({
   user: null,
   authResolved: false,
+  passwordChangeRequired: false,
+  changePasswordUrl: null,
 });
 
 // Synchronously seed the initial client snapshot from localStorage so the very
@@ -55,6 +70,8 @@ function readInitialUser(): User | null {
 let snapshot: AuthSnapshot = Object.freeze({
   user: readInitialUser(),
   authResolved: false,
+  passwordChangeRequired: false,
+  changePasswordUrl: null,
 });
 
 const listeners = new Set<Listener>();
@@ -65,7 +82,12 @@ function emit(): void {
 
 function setSnapshot(next: AuthSnapshot): void {
   // Only replace + notify on a real change so useSyncExternalStore stays stable.
-  if (next.user === snapshot.user && next.authResolved === snapshot.authResolved) {
+  if (
+    next.user === snapshot.user &&
+    next.authResolved === snapshot.authResolved &&
+    next.passwordChangeRequired === snapshot.passwordChangeRequired &&
+    next.changePasswordUrl === snapshot.changePasswordUrl
+  ) {
     return;
   }
   snapshot = Object.freeze(next);
@@ -92,13 +114,18 @@ export const authStore = {
 
   /** Authenticate / refresh the current user. Does not touch authResolved. */
   setUser(user: User | null): void {
-    setSnapshot({ user, authResolved: snapshot.authResolved });
+    setSnapshot({ ...snapshot, user });
   },
 
   /**
    * Force a logout: clear the stored user + JWT, set user null, mark resolved,
    * and notify subscribers. Called by both HTTP clients on a 401 for protected
    * endpoints, and by the hook's logout().
+   *
+   * Also clears passwordChangeRequired/changePasswordUrl: a fresh session
+   * (the next login) starts from a clean slate and re-derives the flag from
+   * that login's own payload / 403s, rather than carrying over state from the
+   * previous session.
    */
   deauth(): void {
     try {
@@ -108,12 +135,51 @@ export const authStore = {
       // storage helpers already swallow their own errors; guard defensively.
     }
     logger.info('De-authenticated (cleared session)');
-    setSnapshot({ user: null, authResolved: true });
+    setSnapshot({
+      user: null,
+      authResolved: true,
+      passwordChangeRequired: false,
+      changePasswordUrl: null,
+    });
   },
 
   /** Mark auth state as definitively resolved (revalidation settled). */
   markResolved(): void {
     if (snapshot.authResolved) return;
-    setSnapshot({ user: snapshot.user, authResolved: true });
+    setSnapshot({ ...snapshot, authResolved: true });
+  },
+
+  /**
+   * Record that the backend rejected a request with 403
+   * `password_change_required`. Called by the HTTP clients. Deliberately
+   * does NOT touch `user` or `authResolved` — the session stays logged in,
+   * only forbidden until the user rotates their password (see FE-WP2 /
+   * the 403 contract).
+   */
+  notifyPasswordChangeRequired(changePasswordUrl: string | null): void {
+    setSnapshot({ ...snapshot, passwordChangeRequired: true, changePasswordUrl });
+  },
+
+  /**
+   * Clear the flag after a successful password change (authApi.changePassword
+   * resolves). Idempotent / cheap to call even when nothing was set.
+   */
+  clearPasswordChangeRequired(): void {
+    if (!snapshot.passwordChangeRequired && snapshot.changePasswordUrl === null) return;
+    setSnapshot({ ...snapshot, passwordChangeRequired: false, changePasswordUrl: null });
   },
 };
+
+/**
+ * Duck-types an error thrown by either HTTP client (`FoundationApiError` from
+ * foundation-client.ts, `ApiError` from client.ts) to detect the 403
+ * `password_change_required` case, without either client importing the
+ * other's error class. Both classes expose `.status: number` and
+ * `.code: string | null`.
+ */
+export function isPasswordChangeRequired(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const status = (err as { status?: unknown }).status;
+  const code = (err as { code?: unknown }).code;
+  return status === 403 && code === PASSWORD_CHANGE_REQUIRED;
+}

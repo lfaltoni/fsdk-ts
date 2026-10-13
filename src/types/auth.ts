@@ -17,7 +17,21 @@ export interface User {
   // stays backwards-compatible with a backend that has not shipped it yet:
   // `undefined` ⇒ unknown ⇒ "don't nag" (see useEmailVerification).
   email_verified?: boolean;
+  // True when someone OTHER than the account holder set the current password
+  // (provisioned, admin-created, admin-reset) and it has not been rotated
+  // since. Derived server-side (`rotation_required`). Optional so the lib
+  // stays backwards-compatible with a backend that has not shipped it yet:
+  // `undefined` ⇒ unknown ⇒ "don't redirect" (see usePasswordChangeRequired).
+  password_change_required?: boolean;
 }
+
+// Machine-readable error code the backend sends on a 403 when the current
+// user must change their password before continuing (see
+// usePasswordChangeRequired / isPasswordChangeRequired). Deliberately a 403,
+// not a 401: the user IS authenticated, just forbidden until they rotate, and
+// a 401 outside /api/auth/* de-authenticates the whole app (see
+// foundation-client.ts / client.ts).
+export const PASSWORD_CHANGE_REQUIRED = 'password_change_required' as const;
 
 export interface PublicProfile {
   user_id: string;
